@@ -247,6 +247,7 @@
 
 <nav class="tabbar"><div class="wrap">
   <button class="tab-btn active" data-tab="funil" onclick="switchTab('funil',this)">Funil ND</button>
+  <button class="tab-btn" data-tab="metricas" onclick="switchTab('metricas',this)">Métricas &amp; Acompanhamento</button>
   <button class="tab-btn" data-tab="campos" onclick="switchTab('campos',this)">Campos Personalizados</button>
   <button class="tab-btn" data-tab="automacoes" onclick="switchTab('automacoes',this)">Automações</button>
   <button class="tab-btn" data-tab="mcp" onclick="switchTab('mcp',this)">MCP e API</button>
@@ -259,6 +260,13 @@
   <a href="#sec-funil">Funil</a>
   <a href="#sec-resumo">Resumo</a>
   <a href="#sec-evolucao">Sugestões de evolução</a>
+</div></nav>
+<nav class="subnav" id="subnav-metricas"><div class="wrap">
+  <a href="#sec-metricas-porque">Por que medir</a>
+  <a href="#sec-metricas-funil">Métricas do funil</a>
+  <a href="#sec-metricas-qualidade">Qualidade de dado</a>
+  <a href="#sec-metricas-onde">Onde olhar no RD</a>
+  <a href="#sec-metricas-cadencia">Cadência de acompanhamento</a>
 </div></nav>
 <nav class="subnav" id="subnav-campos"><div class="wrap">
   <a href="#sec-nativo">Nativo e Personalizado</a>
@@ -444,19 +452,26 @@
     </div>
     <div class="gacc-item">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Motivo de perda é obrigatório pra marcar como perdida</span><span class="tag">já é nativo do RD</span><span class="chev">⌄</span></button>
-      <div class="gacc-body"><p>Correção de termo: o RD Station CRM não tem uma função separada de "arquivar" — a negociação só tem dois destinos, Ganha ou Perdida, e o sistema já exige o motivo pra marcar como Perdida. Não é algo pra configurar, é assim que o RD já funciona. Só precisamos manter a lista dos 9 motivos atualizada e bem usada.</p></div>
+      <div class="gacc-body"><p>Correção de termo: o RD Station CRM não tem uma função separada de "arquivar" — o status da negociação tem 4 valores (<strong>Em andamento</strong>, <strong>Pausada</strong>, <strong>Vendida</strong>, <strong>Perdida</strong>), mas só existem dois destinos de <strong>fechamento</strong>: Ganha ou Perdida, e o sistema já exige o motivo pra marcar como Perdida. Não é algo pra configurar, é assim que o RD já funciona. Só precisamos manter a lista dos 9 motivos atualizada e bem usada.</p>
+      <p style="margin-top:8px"><strong>Em aberto:</strong> o funil ND ainda não define quando usar o status <strong>Pausada</strong> (aberta, mas parada por decisão de quem está com o card — diferente de "esfriando" por falta de atenção). Vale decidir com o time se e quando ele entra no processo.</p></div>
     </div>
     <div class="gacc-item">
-      <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Campos obrigatórios por etapa</span><span class="tag">nativo · planos pagos</span><span class="chev">⌄</span></button>
-      <div class="gacc-body"><p>O RD CRM (planos pagos, ND tem) permite marcar campos como <strong>obrigatórios pra avançar de etapa</strong> — o sistema trava fisicamente o card se o campo não estiver preenchido. É a forma de fazer o "gatilho de passagem" de cada etapa deixar de ser combinado e virar regra. Ex.: pra sair de Discovery, exigir Dor principal, Orçamento estimado e Decisor identificado. Configurar por etapa, ligado ao gatilho da seção 02.</p></div>
+      <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Campos obrigatórios por etapa</span><span class="tag">nativo · Pro/Advanced</span><span class="chev">⌄</span></button>
+      <div class="gacc-body">
+      <p>O RD CRM permite marcar campos como <strong>obrigatórios pra avançar de etapa</strong> — o sistema trava fisicamente o card se o campo não estiver preenchido. É a forma de fazer o "gatilho de passagem" de cada etapa deixar de ser combinado e virar regra.</p>
+      <p style="margin-top:8px">Um campo personalizado tem 4 níveis possíveis: <strong>Visível</strong> (aparece, mas é opcional) · <strong>Obrigatório</strong> (precisa ser preenchido, sem amarração a uma etapa) · <strong>Sempre</strong> (trava até a criação da negociação — não dá pra nem abrir o card sem preencher) · <strong>Etapa</strong> (o nível que interessa aqui: você escolhe a partir de qual etapa o campo passa a ser exigido pra avançar).</p>
+      <p style="margin-top:8px"><strong>Como configurar:</strong> Configurações → Campos Personalizados → editar o campo → nível "Etapa" → selecionar funil e etapa. Ex.: pra sair de Discovery, exigir Dor principal, Orçamento estimado e Decisor identificado.</p>
+      <p style="margin-top:8px">A página oficial da RD documenta este recurso pro plano <strong>Pro</strong>; a ND está no <strong>Advanced</strong> (tier acima), então deve estar incluso — vale só confirmar direto em Configurações antes de formalizar isso no processo.</p></div>
     </div>
     <div class="gacc-item">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Lembrete de prazos vencendo</span><span class="tag">a configurar</span><span class="chev">⌄</span></button>
       <div class="gacc-body"><p>Três frentes, mesma lógica: tarefa vencendo, proposta vencendo (usando a Data de Previsão de Fechamento) e retorno do cliente sem resposta — cada uma dispara um aviso pro responsável alguns dias antes do prazo vencer, pra ninguém descobrir o atraso só depois que já passou.</p></div>
     </div>
     <div class="gacc-item">
-      <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Card parado sem toque = alerta pro responsável</span><span class="tag">a configurar</span><span class="chev">⌄</span></button>
-      <div class="gacc-body"><p>Dispara quando a negociação fica um número de dias sem nenhuma interação registrada — é o "esfriando" de cada etapa (seção 02).</p></div>
+      <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Card parado sem toque = alerta pro responsável</span><span class="tag">nativo + a configurar</span><span class="chev">⌄</span></button>
+      <div class="gacc-body">
+      <p>São duas camadas, não uma só: <strong>Camada 1 — nativo</strong> — "Destacar negociações que estão esfriando no funil de vendas": liga por etapa, define a partir de quantos dias sem interação o card ganha destaque visual + tag de dias parado. Zero automação, zero custo, é o "esfriando" de cada etapa (seção 02) só de ligar o toggle.</p>
+      <p style="margin-top:8px"><strong>Camada 2 — automação personalizada</strong> — pra além do destaque visual: gatilho "negociação parada X dias sem contato" → cria tarefa automática pro responsável ("Retomar contato") + notifica por e-mail. Essa camada garante que o alerta chegue até quem não está de olho no Kanban naquele dia.</p></div>
     </div>
     <div class="gacc-item warn">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Cobrança automática pra marcar Ganho ou Perdido quando o prazo vence e ninguém decidiu</span><span class="tag">a construir</span><span class="chev">⌄</span></button>
@@ -464,7 +479,7 @@
     </div>
     <div class="gacc-item warn">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Alerta à gestão sobre demandas paradas</span><span class="tag">a construir</span><span class="chev">⌄</span></button>
-      <div class="gacc-body"><p>Diferente do alerta ao responsável: este escala direto pro gestor quando o prazo já passou e nada mudou — pra não depender só do vendedor perceber.</p></div>
+      <div class="gacc-body"><p>É a 2ª régua da automação personalizada do item anterior: diferente do alerta ao responsável, este escala direto pro gestor quando o prazo já passou e nada mudou — pra não depender só do vendedor perceber.</p></div>
     </div>
   </div>
 </div></section>
@@ -484,7 +499,7 @@
   </table></div>
   <div class="callout warn" style="margin-top:10px">
     <span class="lbl">Sobre o motivo "Outros"</span>
-    <p><strong>A RD Station recomenda NÃO ter "Outros"</strong> — vira "lixeira" de dado e esconde o motivo real das perdas. Como ele já está cadastrado na conta, a regra mínima é: <strong>sempre escrever na Observação por que perdeu</strong>, e se "Outros" virar um dos motivos mais usados, cadastrar um motivo novo e específico e parar de usar o genérico. A meta é chegar a zero "Outros".</p>
+    <p>A RD não tem uma regra explícita de "não use Outros" — a orientação oficial (ebook de motivos de perda) é evitar motivo genérico demais, porque isso vira "lixeira" de dado e esconde o motivo real das perdas. Como ele já está cadastrado na conta, a regra mínima é: <strong>sempre escrever na Observação por que perdeu</strong>, e se "Outros" virar um dos motivos mais usados, cadastrar um motivo novo e específico e parar de usar o genérico. A meta é chegar a zero "Outros".</p>
   </div>
 </div></section>
 
@@ -526,6 +541,88 @@
 
 </div>
 <!-- ===================== /TAB: FUNIL ===================== -->
+
+<!-- ===================== TAB: MÉTRICAS ===================== -->
+<div class="panel" id="tab-metricas">
+
+<section class="hero"><div class="wrap">
+  <span class="hero-badge" style="background:rgba(74,222,128,.1);border-color:rgba(74,222,128,.35);color:var(--nd-success)">Como saber se o funil está funcionando</span>
+  <h1>Métricas &amp; Acompanhamento</h1>
+  <p class="prose">O funil define etapa, gatilho, prazo e automação — mas sozinho não diz se está funcionando. Esta aba fecha esse ciclo: quais números olhar, onde olhar dentro do próprio RD, e principalmente <strong>qual é o ritmo de reunião que mantém isso vivo</strong> daqui pra frente.</p>
+</div></section>
+
+<section class="block" id="sec-metricas-porque"><div class="wrap">
+  <p class="overline">01</p>
+  <h2>Por que medir</h2>
+  <p class="sec-lead">Sem número, o funil vira anedota — cada um acha que sabe onde está o gargalo, e ninguém confere. A proposta aqui não é montar um BI paralelo nem um painel de controle pesado pro time júnior: é decidir o mínimo de métrica que mostra gargalo e ineficiência de verdade, e criar o hábito de olhar pra ela.</p>
+  <div class="callout brand">
+    <span class="lbl">O que este MVP já dá de graça</span>
+    <p>As etapas, os gatilhos e os prazos "Alvo"/"Esfriando" já definidos na aba <strong>Funil ND</strong> não são só regra de processo — são a base de cálculo de quase toda métrica desta aba. Medir aqui é, na prática, comparar o que está acontecendo com o que já foi combinado lá.</p>
+  </div>
+</div></section>
+
+<section class="block" id="sec-metricas-funil"><div class="wrap">
+  <p class="overline">02</p>
+  <h2>Métricas do funil</h2>
+  <p class="sec-lead">Cinco números que respondem "o funil está saudável?" sem precisar abrir planilha.</p>
+  <div class="scroll"><table>
+    <thead><tr><th>Métrica</th><th>O que mede</th><th>Como calcular / onde olhar</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Conversão etapa a etapa</strong></td><td>Onde o funil realmente afunila — SQL→Discovery→Proposta→Negociação→Fechado</td><td>Negociações que avançaram ÷ negociações que entraram na etapa, no período</td></tr>
+      <tr><td><strong>Tempo médio na etapa vs. SLA</strong></td><td>Se o time está dentro do prazo "Alvo" e do limite de "Esfriando" já definidos por etapa (aba Funil ND)</td><td>Tempo entre entrada e saída da etapa, comparado ao SLA combinado</td></tr>
+      <tr><td><strong>Taxa de vitória</strong></td><td>Eficiência geral do funil</td><td>Ganhas ÷ (Ganhas + Perdidas), no período</td></tr>
+      <tr><td><strong>Motivos de perda, com % de "Outros"</strong></td><td>Se sabemos por que perdemos — a meta de zero "Outros" (seção 03 do Funil ND) vira número acompanhado</td><td>Distribuição de <code>lost_reason_id</code> no período</td></tr>
+      <tr><td><strong>Valor em pipeline e acurácia do forecast</strong></td><td>Quanto está em jogo por etapa, e se a Data de Previsão de Fechamento é confiável</td><td>Soma de <code>total_price</code> por etapa · Data prevista vs. data real de fechamento</td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<section class="block" id="sec-metricas-qualidade"><div class="wrap">
+  <p class="overline">03</p>
+  <h2>Métricas de qualidade de dado</h2>
+  <p class="sec-lead">A auditoria de campos (aba Campos Personalizados) achou os problemas uma vez; aqui eles viram número que se acompanha todo período, não achado que se esquece.</p>
+  <div class="cards2">
+    <div class="c2"><h4>% negociações sem Empresa vinculada</h4><p>O achado principal da auditoria — meta é essa fatia cair período a período.</p></div>
+    <div class="c2"><h4>% contatos sem Cargo preenchido</h4><p><code>job_title</code> existe nativo, mas não é preenchido na prática — mede se isso está mudando.</p></div>
+    <div class="c2"><h4>% negociações sem tarefa aberta</h4><p>Transforma o hábito "nenhum card sem tarefa" (automações globais, aba Funil ND) num número real, não só numa regra combinada.</p></div>
+  </div>
+</div></section>
+
+<section class="block" id="sec-metricas-onde"><div class="wrap">
+  <p class="overline">04</p>
+  <h2>Onde olhar isso no RD</h2>
+  <p class="sec-lead">Quase tudo acima já existe pronto nos <strong>Relatórios nativos do RD Station CRM</strong> — não é preciso construir um painel paralelo. MCP e API (abas seguintes) entram só quando a pergunta é específica demais pro relatório padrão, como cruzar qualidade de campo com etapa do funil ND especificamente.</p>
+  <div class="callout">
+    <span class="lbl">Fonte</span>
+    <p><a href="https://blog.rdstation.com/principais-relatorios-do-rd-station-crm/" target="_blank" rel="noopener noreferrer">↗ Principais relatórios do RD Station CRM — Blog RD</a></p>
+  </div>
+</div></section>
+
+<section class="block" style="border-bottom:none" id="sec-metricas-cadencia"><div class="wrap">
+  <p class="overline">05</p>
+  <h2>Cadência de acompanhamento</h2>
+  <p class="sec-lead">O funil não se mantém sozinho depois de publicado — o acompanhamento daqui pra frente acontece em dois ritmos de reunião, com papéis diferentes.</p>
+
+  <div class="cards2">
+    <div class="c2"><h4>Reunião operacional · semanal</h4><p>Revisão de pipeline: o que está esfriando, vencendo ou sem tarefa aberta agora. Decisão rápida, card por card — não é análise de tendência.</p></div>
+    <div class="c2"><h4>Reunião de processo · periódica</h4><p>Olha os números do período (seções 02 e 03) e investiga a causa: por que a conversão SQL→Discovery caiu, por que "Outros" subiu. A partir disso, ajusta etapa, prazo, campo ou automação — cadência (quinzenal ou mensal) a definir com o time.</p></div>
+  </div>
+
+  <div class="callout ok" style="margin-top:16px">
+    <span class="lbl">O ponto principal</span>
+    <p>É na reunião de processo que a <strong>própria lista de métricas destas seções é revisada e evolui</strong> — não é uma lista fixa gravada em pedra, é pauta recorrente. Cada reunião registra: o que foi discutido, qual ajuste foi decidido, quem é o dono e até quando.</p>
+  </div>
+
+  <div class="callout warn" style="margin-top:16px">
+    <span class="lbl">Sobre metas numéricas</span>
+    <p>Este é um MVP sem histórico ainda — não faz sentido inventar meta-alvo agora. As metas nascem depois do primeiro ciclo de dado real (sugestão: primeiros 30–60 dias rodando), com base no que os números realmente mostrarem.</p>
+  </div>
+</div></section>
+
+<footer><div class="wrap">Métricas &amp; Acompanhamento · Nação Digital · time comercial · rev. 2026-09</div></footer>
+
+</div>
+<!-- ===================== /TAB: MÉTRICAS ===================== -->
 
 <!-- ===================== TAB: CAMPOS ===================== -->
 <div class="panel" id="tab-campos">
@@ -736,6 +833,7 @@
     <div class="callout err">
       <span class="lbl">Muitas negociações sem empresa vinculada</span>
       <p>O levantamento mostra um volume alto de negociações (<code>organization_id</code>) sem organização associada. Isso quebra relatório por segmento, por cidade, por porte — qualquer coisa que dependa da Empresa. Cuidado especial ao criar oportunidade via automação: sempre vincular a organização, nunca deixar em branco "pra depois".</p>
+      <p style="margin-top:8px">Existe uma correção nativa mais direta que revisar automação por automação: <a href="https://ajuda.rdstation.com/s/article/Tornar-o-campo-Empresa-obrigat%C3%B3rio-nas-Oportunidades-do-RD-Station-CRM?language=pt_BR" target="_blank" rel="noopener noreferrer">tornar o campo Empresa obrigatório nas negociações ↗</a> — trava a criação/avanço do card sem organização vinculada, na fonte.</p>
     </div>
   </div>
 </section>
@@ -814,8 +912,8 @@
   </div>
 
   <div class="callout warn" style="margin-top:14px">
-    <span class="lbl">A regra dos 5 minutos (estatística RD)</span>
-    <p>A chance de qualificar um lead inbound cai <strong>21×</strong> quando o 1º contato passa de 5 min pra 30 min; responder em até 30 min pode aumentar o fechamento em até 60%. Por isso o SLA de entrada não é "1 dia" — é minutos. As automações 2 e 3 abaixo existem pra forçar isso.</p>
+    <span class="lbl">A regra dos 5 minutos</span>
+    <p>A chance de qualificar um lead inbound cai <strong>21×</strong> quando o 1º contato passa de 5 min pra 30 min; responder em até 30 min pode aumentar o fechamento em até 60%. O número vem do estudo <strong>Lead Response Management</strong> — a própria RD também cita esse dado em conteúdo dela (ex.: o blog sobre o papel do SDR), não é pesquisa proprietária da plataforma. Por isso o SLA de entrada não é "1 dia" — é minutos. As automações 2 e 3 abaixo existem pra forçar isso.</p>
   </div>
 
   <h3 style="margin-top:20px">Fluxos recomendados — do mais essencial ao avançado</h3>
@@ -849,7 +947,7 @@
   <div class="gacc">
     <div class="gacc-item warn">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">Toda automação que cria negociação deveria vincular a Empresa</span><span class="tag">corrigir</span><span class="chev">⌄</span></button>
-      <div class="gacc-body"><p>Nenhum dos dois fluxos garante o vínculo com a Empresa nem preenche a Data de Previsão de Fechamento — é a causa provável do volume de negociações sem <code>organization_id</code>. Padrão pra toda automação de criação: (a) sempre gerar/vincular a Empresa, (b) já criar a 1ª tarefa de contato no card, (c) padronizar as tags.</p></div>
+      <div class="gacc-body"><p>Nenhum dos dois fluxos garante o vínculo com a Empresa nem preenche a Data de Previsão de Fechamento — é a causa provável do volume de negociações sem <code>organization_id</code>. Padrão pra toda automação de criação: (a) sempre gerar/vincular a Empresa, (b) já criar a 1ª tarefa de contato no card, (c) padronizar as tags. Além disso, dá pra travar isso na fonte — ver "tornar o campo Empresa obrigatório" na aba Campos Personalizados, seção 07.</p></div>
     </div>
     <div class="gacc-item warn">
       <button class="gacc-head" onclick="toggleGacc(this)"><span class="d"></span><span class="tit">O fluxo da Precisian parece incompleto</span><span class="tag">confirmar</span><span class="chev">⌄</span></button>
@@ -926,7 +1024,7 @@
       <tr><td>Paginação</td><td><code>page[number]</code> / <code>page[size]</code> (padrão 20); teto de 10 mil registros por listagem filtrada</td></tr>
       <tr><td>Filtro</td><td>linguagem de query <strong>RDQL</strong> nas listagens</td></tr>
       <tr><td>Recursos da v2</td><td>negociações, contatos, organizações, tarefas, reuniões (+ disponibilidade de agenda), produtos, produtos da negociação, campos personalizados, funis, etapas, origens, campanhas, segmentos, motivos de perda, <strong>anotações</strong>, <strong>arquivos</strong>, <strong>propostas</strong>, times, usuários, <strong>webhooks</strong></td></tr>
-      <tr><td>Webhooks do CRM</td><td><code>crm_deal_created</code> · <code>crm_deal_updated</code> · <code>crm_deal_deleted</code> (planos Basic e Pro) — payload JSON fixo com o objeto completo da negociação; autenticação por header customizado</td></tr>
+      <tr><td>Webhooks do CRM</td><td><code>crm_deal_created</code> · <code>crm_deal_updated</code> · <code>crm_deal_deleted</code> (planos Basic, Pro e Advanced — inclui o plano da ND) — payload JSON fixo com o objeto completo da negociação; autenticação por header customizado</td></tr>
     </tbody>
   </table></div>
 </div></section>
