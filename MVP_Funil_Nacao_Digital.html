@@ -564,7 +564,7 @@
 <section class="block" id="sec-metricas-funil"><div class="wrap">
   <p class="overline">02</p>
   <h2>Métricas do funil</h2>
-  <p class="sec-lead">Cinco números que respondem "o funil está saudável?" sem precisar abrir planilha.</p>
+  <p class="sec-lead">Cinco <strong>indicadores centrais</strong> que respondem "o funil está saudável?" sem precisar abrir planilha.</p>
   <div class="scroll"><table>
     <thead><tr><th>Métrica</th><th>O que mede</th><th>Como calcular / onde olhar</th></tr></thead>
     <tbody>
@@ -575,6 +575,17 @@
       <tr><td><strong>Valor em pipeline e acurácia do forecast</strong></td><td>Quanto está em jogo por etapa, e se a Data de Previsão de Fechamento é confiável</td><td>Soma de <code>total_price</code> por etapa · Data prevista vs. data real de fechamento</td></tr>
     </tbody>
   </table></div>
+
+  <h3 style="margin-top:24px">Indicadores em observação — já medir, sem virar meta ainda</h3>
+  <p class="sec-lead">Dois candidatos que surgiram na conversa: ainda não está decidido se viram indicador oficial, mas fazem sentido começar a medir desde já — quanto mais cedo o dado existir, mais rápido dá pra definir meta de verdade.</p>
+  <div class="cards2">
+    <div class="c2"><h4>Tempo de atendimento (1º contato)</h4><p>Velocidade real de resposta ao lead — liga direto com o SLA "até 30 min" do SQL e com a Regra dos 5 minutos (aba Automações). Calcular: hora de entrada do lead vs. hora do 1º contato registrado.</p></div>
+    <div class="c2"><h4>Propostas apresentadas por negócio</h4><p>Quantas idas e vindas até fechar — indica se o processo comercial está redondo ou exigindo retrabalho.</p></div>
+  </div>
+  <div class="callout warn" style="margin-top:12px">
+    <span class="lbl">Pré-requisito pro segundo indicador</span>
+    <p>Hoje a Proposta entra no card como link solto na <strong>Observação</strong> (aba Funil ND, etapa Proposta) — não pelo recurso nativo de <strong>Propostas</strong> que a API do RD já expõe (aba MCP e API). Pra "propostas por negócio" virar número confiável, ou passa a registrar cada envio ali (uma anotação padronizada por proposta), ou passa a usar o recurso nativo — sem isso, o dado não existe pra contar.</p>
+  </div>
 </div></section>
 
 <section class="block" id="sec-metricas-qualidade"><div class="wrap">
@@ -605,7 +616,12 @@
 
   <div class="cards2">
     <div class="c2"><h4>Reunião operacional · semanal</h4><p>Revisão de pipeline: o que está esfriando, vencendo ou sem tarefa aberta agora. Decisão rápida, card por card — não é análise de tendência.</p></div>
-    <div class="c2"><h4>Reunião de processo · periódica</h4><p>Olha os números do período (seções 02 e 03) e investiga a causa: por que a conversão SQL→Discovery caiu, por que "Outros" subiu. A partir disso, ajusta etapa, prazo, campo ou automação — cadência (quinzenal ou mensal) a definir com o time.</p></div>
+    <div class="c2"><h4>Reunião de processo · mensal</h4><p>Olha os números do mês (seções 02 e 03) e investiga a causa: por que a conversão SQL→Discovery caiu, por que "Outros" subiu. A partir disso, ajusta etapa, prazo, campo ou automação.</p></div>
+  </div>
+
+  <div class="callout ok" style="margin-top:16px">
+    <span class="lbl">Por que mensal</span>
+    <p>Indicador de conversão, taxa de vitória e motivo de perda só conta história com volume — olhar toda semana mistura ruído com tendência. A reunião semanal já cobre a urgência (esfriando, vencendo); a mensal é o espaço certo pra número virar decisão de processo. Quinzenal é uma opção pro início, se o time preferir iterar mais rápido enquanto o hábito pega.</p>
   </div>
 
   <div class="callout ok" style="margin-top:16px">
@@ -615,7 +631,7 @@
 
   <div class="callout warn" style="margin-top:16px">
     <span class="lbl">Sobre metas numéricas</span>
-    <p>Este é um MVP sem histórico ainda — não faz sentido inventar meta-alvo agora. As metas nascem depois do primeiro ciclo de dado real (sugestão: primeiros 30–60 dias rodando), com base no que os números realmente mostrarem.</p>
+    <p>Este é um MVP sem histórico ainda — não faz sentido inventar meta-alvo agora, nem pros 5 indicadores centrais nem pros 2 em observação (seção 02). A régua é medir primeiro: as metas nascem depois do primeiro ciclo de dado real (sugestão: primeiros 30–60 dias rodando, ou o primeiro mês fechado da reunião de processo), com base no que os números realmente mostrarem.</p>
   </div>
 </div></section>
 
