@@ -1735,6 +1735,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       <button class="hm-close" onclick="closeModal('modal-import')" aria-label="Fechar">×</button>
     </div>
     <div class="hm-body">
+      <div id="imp-bruto-banner"></div>
       <div class="form-grid form-row-2">
         <div><label for="imp-data">Data da reunião</label><input type="date" id="imp-data"></div>
         <div>
@@ -1759,7 +1760,8 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
             <div class="file-upload-sub">.txt · .md · .csv · .vtt · .srt · .json · .pdf · .docx</div>
           </div>
           <div class="file-list" id="file-list-display">O texto extraído cai no campo abaixo.</div>
-          <textarea class="transc-area mt" id="imp-transc" placeholder="Cole a transcrição do Teams, Meet ou o relato livre da call."></textarea>
+          <div id="imp-voz"></div>
+          <textarea class="transc-area mt" id="imp-transc" placeholder="Cole a transcrição do Teams, Meet, ou clique em Ditar e fale, ou anexe o áudio da reunião." oninput="salvarBrutoDebounced('imp');avisarTamanhoMaterial('imp-transc','file-list-display')"></textarea>
         </div>
       </div>
     </div>
@@ -1778,6 +1780,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       <button class="hm-close" onclick="closeModal('modal-entregas')" aria-label="Fechar">×</button>
     </div>
     <div class="hm-body">
+      <div id="ent-bruto-banner"></div>
       <p class="hint" style="margin-bottom:18px">
         Estruture o planejamento e as entregas do mês. O pacote é arquivado em 04 e passa a ditar o ritmo da Situação Atual e das pautas.
       </p>
@@ -1818,7 +1821,8 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
             <div class="file-upload-sub">.txt · .md · .csv · .pdf · .docx</div>
           </div>
           <div class="file-list" id="file-list-entregas">Suba o arquivo ou cole o planejamento abaixo.</div>
-          <textarea class="transc-area mt" id="ent-transc" placeholder="Dados crus do plano de trabalho ou entregas fechadas."></textarea>
+          <div id="ent-voz"></div>
+          <textarea class="transc-area mt" id="ent-transc" placeholder="Dados crus do plano de trabalho ou entregas fechadas. Ou clique em Ditar e fale." oninput="salvarBrutoDebounced('ent');avisarTamanhoMaterial('ent-transc','file-list-entregas')"></textarea>
         </div>
       </div>
     </div>
@@ -1837,6 +1841,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       <button class="hm-close" onclick="closeModal('modal-conhecimento')" aria-label="Fechar">×</button>
     </div>
     <div class="hm-body">
+      <div id="cn-bruto-banner"></div>
       <div class="banner ok" style="margin-bottom:18px">
         <span>🧠</span>
         <div><b>02 — Conhecimento &amp; Dados é o que aconteceu.</b> Registro datado: um aprendizado, os números de um período, um diagnóstico.
@@ -1904,7 +1909,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
           <div class="file-list" id="file-list-conhecimento">CSV e planilha exportada funcionam bem aqui — a IA lê a tabela.</div>
           <!-- v34 · entrada por voz: ditar ao vivo ou anexar gravação. -->
           <div id="cn-voz"></div>
-          <textarea class="transc-area mt" id="cn-transc" placeholder="Cole os números, o relatório ou a anotação do aprendizado. Ou clique em Ditar e fale."></textarea>
+          <textarea class="transc-area mt" id="cn-transc" placeholder="Cole os números, o relatório ou a anotação do aprendizado. Ou clique em Ditar e fale." oninput="salvarBrutoDebounced('cn');avisarTamanhoMaterial('cn-transc','file-list-conhecimento')"></textarea>
         </div>
       </div>
     </div>
@@ -1923,6 +1928,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       <button class="hm-close" onclick="closeModal('modal-biblioteca')" aria-label="Fechar">×</button>
     </div>
     <div class="hm-body">
+      <div id="bib-bruto-banner"></div>
       <div class="banner ok" style="margin-bottom:18px">
         <span>📚</span>
         <div><b>05 — Biblioteca é o como se faz.</b> Referência estável, sem data: processo, inventário do que está ativo, guideline, template, definição de métrica.
@@ -1973,7 +1979,8 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
             <div class="file-upload-sub">.txt · .md · .csv · .pdf · .docx</div>
           </div>
           <div class="file-list" id="file-list-biblioteca">Cole a lista de jornadas, o processo, o guideline ou o template.</div>
-          <textarea class="transc-area mt" id="bib-transc" placeholder="Conteúdo bruto do item de biblioteca."></textarea>
+          <div id="bib-voz"></div>
+          <textarea class="transc-area mt" id="bib-transc" placeholder="Conteúdo bruto do item de biblioteca. Ou clique em Ditar e fale." oninput="salvarBrutoDebounced('bib');avisarTamanhoMaterial('bib-transc','file-list-biblioteca')"></textarea>
         </div>
       </div>
     </div>
@@ -4265,9 +4272,15 @@ async function lerTarefas(containerId, tipo) {
   const alvo = listas.filter(l => !CONFIG.listas.cliente.test(l.name) && !antigas.has(l.id));
 
   const res = [];
+  const falharam = [];
   for (const l of alvo) {
-    res.push(await tarefasDaLista(l.id, l.id === ativaId).catch(() => []));
+    res.push(await tarefasDaLista(l.id, l.id === ativaId).catch(() => { falharam.push(l.name); return []; }));
   }
+  /* Bug corrigido: uma lista que falhasse aqui (mesmo depois dos retries de
+     cu()) virava um array vazio em silêncio total — os painéis de higiene e
+     capacidade sub-relatavam sem qualquer indício de que uma lista inteira
+     tinha sumido da leitura. */
+  if (falharam.length) showMessage(`Não consegui ler ${falharam.length} lista(s): ${falharam.join(', ')}. Os painéis de tarefas ficam incompletos até a próxima sincronização.`, 'error');
   return { tarefas: res.flat(), listas };
 }
 
@@ -4766,6 +4779,21 @@ function painelOperacionalMd(base, an, proj) {
 
 /* ---------------------------------- IA ----------------------------------- */
 
+/**
+ * v34.1 · Chamar aiGenerate() direto (sem passar por aiTexto()) pula o
+ * mecanismo de costura automática — se a resposta bater no teto de saída,
+ * o texto cortado é devolvido do mesmo jeito, e quem chamou pode aceitar e
+ * até GRAVAR isso por inteiro sem perceber (ex.: sobrescrever a página
+ * consolidada de um tema na Base ND, ou a narrativa da Situação Atual).
+ * Chame logo depois de todo `await aiGenerate(...)` fora do aiTexto/aiJSON,
+ * que já tratam o próprio truncamento.
+ */
+function avisarSeTruncado(rotulo) {
+  if (aiGenerate.ultimoTruncado) {
+    showMessage(`${rotulo}: a resposta da IA bateu no limite de tamanho e pode ter ficado incompleta no fim. Revise antes de aprovar.`, 'info');
+  }
+}
+
 async function aiGenerate(prompt, retries = 2) {
   const chave = $('cfg-gemini-key')?.value.trim() || state.geminiKeyManual || apiKey || "";
   const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${chave}`;
@@ -4780,7 +4808,13 @@ async function aiGenerate(prompt, retries = 2) {
 
   const payload = {
     contents: [{ parts: [{ text: texto0 }] }],
-    generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }
+    /* v34.1 · Era 8192 — bem abaixo do teto de saída do modelo (gemini-2.5-
+       flash suporta até 65536). Um teto baixo demais é a causa raiz de quase
+       todo corte de resposta no sistema: subir isto reduz a frequência de
+       TODOS os truncamentos (ver aiTexto/MAX_CONTINUACOES abaixo, e os
+       chamadores diretos de aiGenerate() que reescrevem documento inteiro
+       sem passar pela costura automática). */
+    generationConfig: { temperature: 0.3, maxOutputTokens: 65536 }
   };
 
   for (let i = 0; i <= retries; i++) {
@@ -8097,6 +8131,7 @@ async function gateEsqueleto(d, markdown, ctx) {
   const remendo = await aiGenerate(promptRemendo({
     modo: d.modo, faltando, markdown, fatos: d.fatos, material: ctx.material
   }), 1).catch(() => null);
+  avisarSeTruncado('Remendo de seção');
 
   if (!remendo) {
     d.achados.push({ severidade: 'media', tipo: 'Seção incompleta',
@@ -8672,6 +8707,7 @@ async function refinarTexto() {
       markdown: antes,
       bruto: d?.ctx?.material || ''
     }));
+    avisarSeTruncado('Refino');
     novo = String(novo || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
     if (!novo) throw new Error('O refino voltou vazio. Tente uma instrução mais específica.');
 
@@ -10637,7 +10673,12 @@ function pararDitado() {
     b.classList.remove('on');
     b.innerHTML = '🎙️ Ditar';
   });
-  const l = $('mic-live'); if (l) l.hidden = true;
+  /* Bug corrigido: `id="mic-live"` é fixo em barraVoz(), mas agora quatro
+     formulários diferentes (ata/conhecimento/entregas/biblioteca) podem ter
+     renderizado sua própria barra de voz — todos os modais ficam no DOM ao
+     mesmo tempo (só alternam classe .active), então pode haver mais de um
+     elemento com esse id. querySelectorAll por classe esconde todos. */
+  document.querySelectorAll('.mic-live').forEach(l => { l.hidden = true; });
 }
 
 /**
@@ -10674,10 +10715,16 @@ function ditar(idAlvo, btn) {
 
   btn.classList.add('on');
   btn.innerHTML = '⏹ Parar';
-  const live = $('mic-live');
+  /* Bug corrigido: `id="mic-live"` é fixo em barraVoz() — com mais de um
+     formulário podendo ter renderizado sua barra de voz, pode haver mais de
+     um elemento com esse id no DOM (todo modal fica montado, só alterna
+     .active). Escopar pelo .voz-bar do próprio botão clicado garante que o
+     balão "ouvindo…" atualiza no formulário certo. */
+  const live = btn.closest('.voz-bar')?.querySelector('.mic-live');
   if (live) { live.hidden = false; live.textContent = 'Ouvindo…'; }
 
   let finalizado = '';
+  let parcialAtual = '';   // v34.1 · último trecho ainda não confirmado como final
 
   rec.onresult = (ev) => {
     let parcial = '';
@@ -10686,6 +10733,7 @@ function ditar(idAlvo, btn) {
       if (ev.results[i].isFinal) finalizado += (finalizado ? ' ' : '') + t.trim();
       else parcial += t;
     }
+    parcialAtual = parcial;
     /* O campo recebe só o que já é definitivo; o parcial vive no balão. */
     ta.value = [ditado.base, finalizado].filter(Boolean).join('\n');
     if (live) live.textContent = parcial.trim() || 'Ouvindo…';
@@ -10694,10 +10742,27 @@ function ditar(idAlvo, btn) {
     ta.dispatchEvent(new Event('input', { bubbles: true }));
   };
 
+  /**
+   * Bug corrigido: o navegador pode encerrar a sessão de reconhecimento no
+   * meio de uma frase, sem NUNCA marcar o trecho em andamento como `isFinal`
+   * — o texto que só existia no balão "ouvindo…" sumia em silêncio, e o
+   * ditado longo perdia a última frase antes de cada reinício automático (ou
+   * antes de parar de vez, num erro). Ao encerrar, se sobrou parcial não
+   * confirmado, some ele ao campo em vez de descartar.
+   */
+  const flushParcial = () => {
+    if (!parcialAtual.trim()) return;
+    finalizado += (finalizado ? ' ' : '') + parcialAtual.trim();
+    ta.value = [ditado.base, finalizado].filter(Boolean).join('\n');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+    parcialAtual = '';
+  };
+
   rec.onerror = (ev) => {
     /* "no-speech" e "aborted" acontecem no uso normal (pausa longa, clique em
        parar) e não são erro para o usuário. O resto vale avisar. */
     if (ev.error === 'no-speech' || ev.error === 'aborted') return;
+    flushParcial();
     const msg = ev.error === 'not-allowed'
       ? 'O navegador bloqueou o microfone. Libere a permissão e tente de novo.'
       : `Transcrição interrompida: ${ev.error}.`;
@@ -10710,6 +10775,7 @@ function ditar(idAlvo, btn) {
      e ninguém entende por quê. */
   rec.onend = () => {
     if (ditado.rec !== rec) return;      // parada pedida pelo usuário
+    flushParcial();
     ditado.base = ta.value.trim();
     finalizado = '';
     try { rec.start(); } catch (_) { pararDitado(); }
@@ -10768,7 +10834,11 @@ REGRAS
         { inlineData: { mimeType: mime, data: b64 } }
       ]
     }],
-    generationConfig: { temperature: 0.1, maxOutputTokens: 8192 }
+    /* v34.1 · Era 8192 (~6 mil palavras) — baixo demais para transcrição
+       limpa e completa de uma reunião longa (o teto de arquivo é 18 MB, ~1-2h
+       de áudio). Subido para o teto real do modelo; reduz os casos em que
+       `r.truncado` (abaixo) precisa avisar "corte em partes". */
+    generationConfig: { temperature: 0.1, maxOutputTokens: 65536 }
   };
 
   const res = await fetch(url, {
@@ -10845,7 +10915,7 @@ function barraVoz(idAlvo, idLista, sufixo) {
       <input type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.opus,.webm" multiple
         onchange="anexarAudio(this, '${idAlvo}', '${idLista}')">
     </label>
-    <span class="mic-live" id="mic-live" hidden></span>
+    <span class="mic-live" id="mic-live-${sufixo}" hidden></span>
     <span class="voz-hint">Ditar roda no navegador, de graça. Anexar áudio sobe o arquivo para a IA transcrever.</span>
   </div>`;
 }
@@ -12423,6 +12493,25 @@ function limparAnexos(inputId, textAreaId, displayId, textoPadrao) {
   if (displayId && $(displayId)) $(displayId).textContent = textoPadrao || 'Nenhum anexo.';
 }
 
+/**
+ * Bug corrigido: o aviso de "texto maior que o teto que a IA lê"
+ * (CONFIG.limitePrompt) só existia no caminho de upload de arquivo
+ * (handleFileUpload, acima). Quem cola a transcrição direto no campo ou dita
+ * ao vivo — o caminho principal para reunião longa — nunca via esse aviso;
+ * o corte acontecia dentro do prompt, em silêncio total. Chamada a cada
+ * `input` do campo (ver oninput nos textareas de material bruto).
+ */
+function avisarTamanhoMaterial(textAreaId, displayId) {
+  if (state.arquivos?.length) return;   // handleFileUpload já mantém seu próprio resumo aqui
+  const el = $(textAreaId), display = $(displayId);
+  if (!el || !display) return;
+  const total = el.value.length;
+  if (!total) return;                   // campo vazio: deixa o texto-guia original
+  display.innerHTML = total > CONFIG.limitePrompt
+    ? `⚠️ ${total.toLocaleString('pt-BR')} caracteres — a IA lê só os primeiros ${CONFIG.limitePrompt.toLocaleString('pt-BR')}. Se o material for maior que isso, considere dividir em duas importações.`
+    : `${total.toLocaleString('pt-BR')} caractere(s).`;
+}
+
 /** Limpa os três formulários de importação de uma vez. */
 function limparTodosAnexos() {
   limparAnexos('imp-files', 'imp-transc', 'file-list-display', 'O texto extraído cai no campo abaixo.');
@@ -12439,6 +12528,12 @@ function openImportModal() {
   ['imp-titulo', 'imp-notas'].forEach(id => $(id).value = '');
   limparAnexos('imp-files', 'imp-transc', 'file-list-display', 'O texto extraído cai no campo abaixo.');
   limparTags('imp');
+  ofereceBruto('imp');
+  /* Bug corrigido: barraVoz() (Ditar ao vivo / Anexar áudio) só estava
+     plugada no formulário de Conhecimento & Dados — o de Importar Ata, que é
+     o uso principal (gravar a reunião e o Hub escrever sozinho), não tinha
+     microfone nem upload de áudio, só upload de arquivo de texto. */
+  $('imp-voz').innerHTML = barraVoz('imp-transc', 'file-list-display', 'imp');
   openModal('modal-import');
 }
 
@@ -12490,6 +12585,7 @@ async function processarAta() {
     state.handleMode = 'ata';
     state.dossie = r.dossie;
     closeModal('modal-import');
+    descartarBruto('imp');   // material bruto virou dossiê/draft: a partir daqui quem protege é o rascunho (hm-editor)
     abrirHandle(nomePagina(CONFIG.prefixos.ata, { dataBr, titulo, siglas: tg.siglas }), ata, 'ata');
     showMessage(mensagemDeGates(r.dossie, 'Ata estruturada'), r.dossie.achados.some(a => a.severidade === 'alta') ? 'info' : 'success');
   } catch (e) {
@@ -12532,6 +12628,8 @@ function openEntregasModal() {
   ['ent-mes', 'ent-notas', 'ent-ini', 'ent-fim'].forEach(id => $(id).value = '');
   onTipoReferencia();
   limparAnexos('ent-files', 'ent-transc', 'file-list-entregas', 'Suba o arquivo ou cole o planejamento.');
+  ofereceBruto('ent');
+  $('ent-voz').innerHTML = barraVoz('ent-transc', 'file-list-entregas', 'ent');
   openModal('modal-entregas');
 }
 
@@ -12560,6 +12658,7 @@ async function processarEntregas() {
     state.handleMode = 'entregas';
     state.dossie = r.dossie;
     closeModal('modal-entregas');
+    descartarBruto('ent');
     abrirHandle(nomePagina(CONFIG.prefixos.pacote, { titulo: mes }), r.markdown, 'entregas');
     showMessage(mensagemDeGates(r.dossie, 'Pacote estruturado'), 'success');
   } catch (e) {
@@ -12595,6 +12694,7 @@ function openConhecimentoModal() {
   ['cn-titulo', 'cn-periodo', 'cn-fonte', 'cn-notas', 'cn-tema'].forEach(id => { const el = $(id); if (el) el.value = ''; });
   limparAnexos('cn-files', 'cn-transc', 'file-list-conhecimento', 'CSV e planilha exportada funcionam bem aqui — a IA lê a tabela.');
   limparTags('cn');
+  ofereceBruto('cn');
   montarAlcance('cn');
   onTipoConhecimento();
   $('cn-voz').innerHTML = barraVoz('cn-transc', 'file-list-conhecimento', 'cn');
@@ -12652,6 +12752,7 @@ async function processarConhecimento() {
     };
     state.handleMode = 'conhecimento';
     closeModal('modal-conhecimento');
+    descartarBruto('cn');
     abrirHandle(nomePagina(t.prefixo, { dataBr, titulo, siglas: tg.siglas }), markdown, 'conhecimento');
     showMessage(mensagemDeGates(r.dossie, `${t.tipoDoc} estruturado`), 'success');
   } catch (e) {
@@ -12782,6 +12883,10 @@ async function publicarSituacao({ narrar = true, ataNova = null, motivo = '', na
       aprendizados: resumoAprendizados(base),
       insights: resumoInsights(base)
     })));
+    /* Este caminho publica direto na 01, sem tela de revisão (ao contrário
+       de revisarSituacao(), que passa por aprovação) — se cortar no teto de
+       saída, é a única rede de segurança antes de ir pro ClickUp. */
+    avisarSeTruncado('Situação Atual');
   } else {
     // Preserva a narrativa anterior, removendo apenas os blocos calculados antigos.
     narrativa = extrairNarrativa(base.situacao);
@@ -13036,6 +13141,7 @@ async function promoverParaGlobal({ tema, siglas, titulo, dataBr, dataIso, areas
     tema: nomeTema, titulo, dataBr, areas: (areas || []).join(', '),
     registroCliente: conteudoCliente, soDiretriz
   }));
+  avisarSeTruncado('Versão genérica para a Base ND');
 
   let temaRef = acharTema(g, tema);
   if (!temaRef) {
@@ -13079,6 +13185,11 @@ async function promoverParaGlobal({ tema, siglas, titulo, dataBr, dataIso, areas
   const consolidado = await aiGenerate(promptTemaConsolidado({
     tema: nomeTema, consolidadoAtual: extrairNarrativa(atual), registroNovo: generico, indice
   }));
+  /* Maior blast radius do arquivo: esta página é compartilhada entre TODAS
+     as contas (Base ND), e é sobrescrita por inteiro (editarPagina 'replace',
+     logo abaixo). Um corte aqui apaga conhecimento consolidado de outras
+     contas sem qualquer aviso, se não fosse este check. */
+  avisarSeTruncado('Consolidado do tema na Base ND');
 
   const cabTemaNovo = blocoMetadados({
     tipoDoc: 'Tema de método', id: `global/tema/${slug(tema)}`,
@@ -13224,6 +13335,84 @@ async function montarBaseGlobal() {
     showMessage(`${faltando.length} seção(ões) criada(s) na base global.`, 'success');
     await abrirBaseGlobal();
   } catch (e) { showMessage(registrarErro('montar base global', e), 'error'); }
+}
+
+/* ===================== v34.1 · MATERIAL BRUTO QUE SOBREVIVE ==============
+   O rascunho abaixo (v18) só protege a tela de revisão — DEPOIS que a IA já
+   rodou. Mas quem dita ou cola uma transcrição inteira gasta o tempo ANTES
+   disso, na tela de importação, e só clica em "Processar com IA" no final.
+   Fechar a aba, atualizar a página ou o navegador cair nesse meio-tempo
+   perdia tudo: nem uma linha do material bruto tinha backup. Mesma lógica do
+   rascunho (sessionStorage, expira em 12h, nunca restaura sozinho) aplicada
+   um passo mais cedo, aos campos de material bruto dos quatro formulários de
+   importação (ata/conhecimento/entregas/biblioteca). */
+
+const BRUTO_KEY = 'nd_hub_bruto_v34';
+const BRUTO_CAMPOS = {
+  imp: ['imp-titulo', 'imp-notas', 'imp-transc'],
+  cn:  ['cn-titulo', 'cn-notas', 'cn-transc'],
+  ent: ['ent-notas', 'ent-transc'],
+  bib: ['bib-titulo', 'bib-notas', 'bib-transc']
+};
+
+function salvarBruto(prefixo) {
+  const campos = BRUTO_CAMPOS[prefixo]; if (!campos) return;
+  const valores = {}; let temConteudo = false;
+  for (const id of campos) {
+    const v = $(id)?.value || '';
+    valores[id] = v;
+    if (v.trim()) temConteudo = true;
+  }
+  try {
+    const tudo = JSON.parse(sessionStorage.getItem(BRUTO_KEY) || '{}');
+    if (!temConteudo) delete tudo[prefixo];
+    else tudo[prefixo] = { quando: Date.now(), projetoId: state.projetoId, valores };
+    sessionStorage.setItem(BRUTO_KEY, JSON.stringify(tudo));
+  } catch (_) { /* cota estourada não pode derrubar a digitação */ }
+}
+const salvarBrutoDebounced = debounce(salvarBruto, 1200);
+
+function lerBruto(prefixo) {
+  try {
+    const r = JSON.parse(sessionStorage.getItem(BRUTO_KEY) || '{}')[prefixo];
+    if (!r) return null;
+    if (Date.now() - r.quando > 12 * 3600000) { descartarBruto(prefixo); return null; }
+    if (r.projetoId !== state.projetoId) return null;   // material de outra conta
+    return r;
+  } catch (_) { return null; }
+}
+
+function descartarBruto(prefixo) {
+  try {
+    const tudo = JSON.parse(sessionStorage.getItem(BRUTO_KEY) || '{}');
+    delete tudo[prefixo];
+    sessionStorage.setItem(BRUTO_KEY, JSON.stringify(tudo));
+  } catch (_) {}
+}
+
+function restaurarBruto(prefixo) {
+  const r = lerBruto(prefixo); if (!r) return;
+  for (const id of (BRUTO_CAMPOS[prefixo] || [])) {
+    const el = $(id); if (el && r.valores[id] !== undefined) el.value = r.valores[id];
+  }
+  const banner = $(`${prefixo}-bruto-banner`); if (banner) banner.innerHTML = '';
+  showMessage('Material bruto retomado. Nada tinha sido processado ainda.', 'info');
+}
+
+/** Chamada ao abrir cada modal de importação, depois de limparAnexos(). Se
+ *  sobrou material não processado desta conta, oferece retomar — nunca
+ *  restaura sozinho por cima do que limparAnexos() acabou de zerar. */
+function ofereceBruto(prefixo) {
+  const banner = $(`${prefixo}-bruto-banner`); if (!banner) return;
+  const r = lerBruto(prefixo);
+  if (!r) { banner.innerHTML = ''; return; }
+  const quando = new Date(r.quando).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+  banner.innerHTML = `<div class="banner" style="border-left-color:var(--cyan);margin-bottom:14px">
+    <span>📄</span>
+    <div style="flex:1">Você tinha material não processado aqui, de ${esc(quando)}. Nada foi enviado à IA nem ao ClickUp.</div>
+    <button type="button" class="btn btn-primary btn-sm" onclick="restaurarBruto('${prefixo}')">Retomar</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="descartarBruto('${prefixo}');$('${prefixo}-bruto-banner').innerHTML=''">Descartar</button>
+  </div>`;
 }
 
 /* ===================== v18 · RASCUNHO QUE SOBREVIVE ======================
@@ -14250,6 +14439,7 @@ async function refinarPauta() {
   try {
     if (!state.refinoPauta) state.refinoPauta = { original: antes, rodadas: [] };
     let novo = await aiGenerate(promptRefino({ modo: 'pauta', instrucao, markdown: antes, bruto: '' }));
+    avisarSeTruncado('Refino da pauta');
     novo = String(novo || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
     if (!novo) throw new Error('o refino voltou vazio');
 
@@ -15783,8 +15973,10 @@ function openBibliotecaModal() {
   ['bib-titulo', 'bib-notas', 'bib-tema'].forEach(id => { const el = $(id); if (el) el.value = ''; });
   limparAnexos('bib-files', 'bib-transc', 'file-list-biblioteca', 'Cole a lista de jornadas, o processo, o guideline ou o template.');
   limparTags('bib');
+  ofereceBruto('bib');
   montarAlcance('bib');
   onTipoBiblioteca();
+  $('bib-voz').innerHTML = barraVoz('bib-transc', 'file-list-biblioteca', 'bib');
   openModal('modal-biblioteca');
 }
 
@@ -15869,6 +16061,7 @@ async function processarBiblioteca() {
     state.handleMode = 'biblioteca';
     state.dossie = r.dossie;
     closeModal('modal-biblioteca');
+    descartarBruto('bib');
     abrirHandle(nomePagina(t.nome, { titulo, siglas: tg.siglas }), markdown, 'biblioteca');
     showMessage(mensagemDeGates(r.dossie, 'Item estruturado'), 'success');
   } catch (e) {
@@ -16078,6 +16271,7 @@ ${contextoDaBase(base)}
 
 [PERGUNTA]
 ${pergunta}`);
+    avisarSeTruncado('Resposta');
     $('qa-resposta').innerHTML = mdRender(resposta);
     /* v22 · guarda o MARKDOWN, não o HTML renderizado. Copiar o que está na
        tela devolveria texto sem formatação; o markdown cola formatado no
