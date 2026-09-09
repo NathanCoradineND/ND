@@ -952,6 +952,17 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
     </div>
     <div class="hm-body md-content">
 
+      <p class="hint" style="margin-bottom:16px">
+        <b>Nota sobre a numeração:</b> este documento cresceu por acréscimo — cada
+        versão nova (v17, v18, v20…) recebeu uma seção ou subseção no fim, ou
+        aninhada sob o número da parte que ela expandia (ex.: <b>14.9.x</b> documenta
+        as versões v20 a v27 do sistema de gates, seção 14). Não é um índice
+        sequencial de leitura ponta a ponta: os números <b>13</b> e <b>14.9.9</b> não
+        existem (conteúdo removido ou renomeado em revisão anterior, sem
+        renumerar o resto) — não é erro de digitação, é histórico preservado
+        de propósito. Use Ctrl+F no título da seção, não no número.
+      </p>
+
       <h2>1. O que é</h2>
       <p>O <b>Hub de Conhecimento</b> é a evolução do Hub de Comunicação: nasceu para organizar reuniões e passou a organizar tudo que a operação sabe sobre um cliente.</p>
       <p>Ele mantém uma <b>base de conhecimento consolidada por cliente</b> — agendas, documentos e registros de todas as áreas num documento só, usada como segundo cérebro da operação. Não existe base de CRM separada da base de Performance: existe a base do cliente, e cada registro carrega a sigla da área que o produziu, ou as siglas quando envolveu mais de uma.</p>
@@ -1029,12 +1040,27 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
         </tbody>
       </table>
 
+      <h3>02 — Conhecimento &amp; Dados <span style="color:var(--g3);font-size:12px">· o que aconteceu</span></h3>
+      <p>Registro datado: um aprendizado, os números de um período, um diagnóstico, um export analisado. <b>Não reescreve a 01</b> — é fonte que entra como contexto na próxima ata e pauta, nunca gatilho de reescrita (ver a tabela acima).</p>
+      <p>Quando o registro carrega uma diretriz reaproveitável — não só o dado específico do cliente —, essa parte (Seção 2) pode ser <b>promovida para a Base ND</b>: vira conhecimento de agência, generalizado e sem nome de cliente.</p>
+
+      <h3>03 — Pautas &amp; Atas <span style="color:var(--g3);font-size:12px">· registro de conversa</span></h3>
+      <p><b>Pauta e ata moram juntas</b>: a pauta de uma reunião vira contexto da ata que a sucede. É a seção com o pipeline mais elaborado — extração em micro-chamadas, ancoragem de cada evidência a um trecho literal da transcrição, auditoria do texto final contra os fatos extraídos — porque é a entrada de maior volume e a que mais alimenta a 01.</p>
+      <p>A transcrição bruta é aninhada como subpágina, em trechos numerados e citáveis: cada decisão ou ação da ata pode apontar para o trecho exato que a sustenta.</p>
+
+      <h3>04 — Entregas <span style="color:var(--g3);font-size:12px">· planejamento e pacotes fechados</span></h3>
+      <p>O pacote de entregas de um ciclo (mês, sprint, período ou trimestre) — o que foi planejado e o que foi entregue. Uma vez arquivado, <b>passa a ditar o ritmo</b> da Situação Atual e das pautas seguintes: é a referência de "o que deveria estar acontecendo agora".</p>
+
+      <h3>05 — Biblioteca Operacional <span style="color:var(--g3);font-size:12px">· como se faz</span></h3>
+      <p>Referência estável, sem data: processo, inventário do que está ativo, guideline, template, definição de métrica. Cada item segue <b>Seção 1 — conteúdo do cliente</b> · <b>Seção 2 — diretriz reaproveitável</b>, e a Seção 2 pode ser promovida para a Base ND — mesma lógica da 02.</p>
+
       <h2>11. Multimarca</h2>
       <p>O planejamento é <b>individual por marca</b> e a leitura consolidada é geral: capacidade por área, pacote com seção por marca, registros com tag de marca, inventário com coluna de marca. A marca nunca ganha base própria — o consolidado do cliente é a soma delas.</p>
 
       <h2>12. Por que markdown com esqueleto fixo</h2>
       <p>Toda página gravada usa títulos <code>##</code> com nomes constantes e o ponto-chave em negrito. Não é estética: é para que a IA que reler essa base amanhã ache a informação pelo título, sem precisar interpretar texto corrido. Seção vazia declara "nada registrado" em vez de sumir — seção que às vezes existe e às vezes não é pior que seção vazia.</p>
       <p>O cabeçalho de metadados existe porque a API de documentos do ClickUp <b>não expõe tag de documento</b>. Então tipo, ID, datas, áreas, ritual, público, marca e relações vão gravados no próprio markdown: sobrevivem no ClickUp, entram na busca nativa e são lidos de volta pelo Hub.</p>
+      <p><b>Segurança na renderização (v34.1):</b> markdown vira HTML antes de ir para a tela — e título de tarefa, comentário e conteúdo de página do ClickUp são editáveis por qualquer pessoa do workspace, não só por quem opera o Hub. Todo HTML gerado a partir de markdown passa por sanitização (DOMPurify) antes de entrar na página, para que um trecho malicioso colado ou digitado por qualquer membro do workspace — ou reproduzido por uma resposta de IA — não vire código executando no seu navegador.</p>
 
       <h2>14. Gates: análise fatiada, aprovação única</h2>
       <p>Um prompt monolítico gerando o documento inteiro tinha três defeitos: erro em qualquer bloco contaminava tudo, não havia como regerar só a parte torta, e o efeito colateral na 01 vinha embutido sem ser mostrado. A importação roda como <b>pipeline de chamadas curtas e especializadas</b>, cada uma com um único trabalho, <b>por trás da cortina</b>: você vê o progresso, não oito telas de aprovação.</p>
@@ -1065,6 +1091,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
           <tr><td><b>Toda evidência tem endereço</b></td><td>Se o trecho citado como prova não existe no material, é achado de severidade alta — não é opinião, é conferência.</td></tr>
         </tbody>
       </table>
+      <p><b>Exceção declarada:</b> estas três invariantes valem para o pipeline de gates (ata, entregas, conhecimento, biblioteca, e "👁 Revisar situação"). A reescrita <i>automática</i> da narrativa da 01, disparada como efeito colateral de aprovar uma ata ou um pacote de entregas, é um caminho à parte — não roda gate nenhum (nem esqueleto, nem auditoria) e grava direto no ClickUp sem tela de revisão própria. O que foi aprovado ali foi a ata/o pacote, não o texto da 01 que é reescrito em seguida. Único cuidado hoje: se a resposta da IA bater no teto de tamanho, um aviso aparece — mas nada bloqueia a gravação.</p>
 
       <h2>14.2. Refino dirigido</h2>
       <p>A tela de revisão tem três caixas: <code>Editar markdown</code>, <code>Preview</code> e <b><code>💬 Refinar</code></b>. Você escreve <i>"detalha mais as decisões e separa o pacote por marca"</i> e o Hub reroda <b>só a redação</b>, mantendo tudo o mais. Chips de atalho cobrem os pedidos que se repetem, e cada rodada fica no histórico com um botão de voltar.</p>
@@ -1094,21 +1121,6 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       </table>
       <p>A busca é local — títulos, tipo e áreas — e varre <b>todas</b> as filhas da seção, não só as visíveis no painel: a duplicata que interessa pegar é justamente a que saiu da primeira página da lista e ninguém lembra que existe.</p>
       <p><b>"Criar novo mesmo assim" fica sempre visível.</b> Se o gate empurrar demais para atualizar, o Hub começa a sobrescrever registro datado — e aí o histórico da 02 morre, que é o oposto do que este gate existe para proteger. <b>Colisão sugere; você decide.</b></p>
-
-      <h2>15. Conciliação de tarefas</h2>
-      <p>O Hub sempre <b>leu</b> a camada de tarefas e nunca <b>escreveu</b> nela. Consequência: a ata registrava "ação com task vinculada" quando metade das ações nascia na própria reunião e não virava task nenhuma. A 03 acumulava combinado que ninguém executava, e os "combinados em aberto" da página-mãe nunca fechavam.</p>
-      <p>A conciliação fecha o ciclo em quatro direções:</p>
-      <table>
-        <thead><tr><th>Direção</th><th>O que detecta</th><th>Saída</th></tr></thead>
-        <tbody>
-          <tr><td>🆕 Combinado sem task</td><td>ação ou pendência documentada sem tarefa correspondente</td><td>propõe criação com descrição estruturada</td></tr>
-          <tr><td>👻 Task sem lastro</td><td>tarefa aberta que não nasceu de registro nenhum</td><td>ou falta documentação, ou é trabalho fantasma</td></tr>
-          <tr><td>⚠️ Divergência de estado</td><td>ata diz pendência aberta, task já fechada; prazo do doc ≠ due date</td><td>aponta o lado que precisa alinhar</td></tr>
-          <tr><td>📄 Fora do catálogo</td><td>tarefa cujo tema não aparece no catálogo de atividades da 00</td><td>achado de contrato: vira aditivo ou fora de escopo</td></tr>
-        </tbody>
-      </table>
-      <p>O casamento é por <b>significado</b>, não por texto igual: "Revisar segmentação de inativos" casa com "Segmentação — base inativa". Cada proposta chega editável — título, lista de destino, prazo, estimativa e descrição — e é <b>aprovada individualmente</b>. Não existe "criar todas": é a única função do Hub que escreve fora do documento, e escrita externa não recebe atalho.</p>
-      <p>Padrões de criação: responsável é você quando o combinado não nomeou ninguém, prazo é o próximo dia útil quando não veio data, estimativa é 30 min (2 h quando a extração classificou o item como complexo) e a descrição sai no molde <b>Objetivo · O que precisa ser feito · Entregas esperadas</b>. A conciliação roda como gate dentro da importação e também sozinha, pelo botão, varrendo as últimas atas e o pacote vigente.</p>
 
       <h2>14.9. As duas bases — distinção que organiza tudo</h2>
       <table>
@@ -1375,6 +1387,25 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       <p><b>Pauta fica em 03, com as atas.</b> A tentação é criar uma seção só de pautas, mas pauta e ata são o mesmo assunto em dois tempos — a pauta é a reunião antes, a ata é a reunião depois. Separá-las quebraria o de-para que o Hub usa para dizer "isto estava na pauta e não foi tratado".</p>
       <p><b>Report fica em 04, com os pacotes.</b> Report é prestação de contas do ciclo, mesma natureza do pacote de entregas. Em 03 ficaria misturado com registro de conversa, que é coisa diferente.</p>
       <p><b>02 e 05 são estruturas separadas de propósito.</b> A distinção não é organizacional, é de uso: quem procura precedente ("já analisamos isso?") vai na 02; quem vai executar ("como se faz?") vai na 05. O super card do dashboard mostra as duas lado a lado justamente porque a pergunta muda o destino.</p>
+
+      <!-- v34.1 · Movida para cá (antes ficava encaixada no meio da família
+           14.9.x, fora de ordem — a leitura pulava de "14.4" pra "15", de
+           volta pra "14.9", e só então seguia pra "15.0" em diante).
+           Mesmo texto, sem alteração de conteúdo. -->
+      <h2>15. Conciliação de tarefas</h2>
+      <p>O Hub sempre <b>leu</b> a camada de tarefas e nunca <b>escreveu</b> nela. Consequência: a ata registrava "ação com task vinculada" quando metade das ações nascia na própria reunião e não virava task nenhuma. A 03 acumulava combinado que ninguém executava, e os "combinados em aberto" da página-mãe nunca fechavam.</p>
+      <p>A conciliação fecha o ciclo em quatro direções:</p>
+      <table>
+        <thead><tr><th>Direção</th><th>O que detecta</th><th>Saída</th></tr></thead>
+        <tbody>
+          <tr><td>🆕 Combinado sem task</td><td>ação ou pendência documentada sem tarefa correspondente</td><td>propõe criação com descrição estruturada</td></tr>
+          <tr><td>👻 Task sem lastro</td><td>tarefa aberta que não nasceu de registro nenhum</td><td>ou falta documentação, ou é trabalho fantasma</td></tr>
+          <tr><td>⚠️ Divergência de estado</td><td>ata diz pendência aberta, task já fechada; prazo do doc ≠ due date</td><td>aponta o lado que precisa alinhar</td></tr>
+          <tr><td>📄 Fora do catálogo</td><td>tarefa cujo tema não aparece no catálogo de atividades da 00</td><td>achado de contrato: vira aditivo ou fora de escopo</td></tr>
+        </tbody>
+      </table>
+      <p>O casamento é por <b>significado</b>, não por texto igual: "Revisar segmentação de inativos" casa com "Segmentação — base inativa". Cada proposta chega editável — título, lista de destino, prazo, estimativa e descrição — e é <b>aprovada individualmente</b>. Não existe "criar todas": é a única função do Hub que escreve fora do documento, e escrita externa não recebe atalho.</p>
+      <p>Padrões de criação: responsável é você quando o combinado não nomeou ninguém, prazo é o próximo dia útil quando não veio data, estimativa é 30 min (2 h quando a extração classificou o item como complexo) e a descrição sai no molde <b>Objetivo · O que precisa ser feito · Entregas esperadas</b>. A conciliação roda como gate dentro da importação e também sozinha, pelo botão, varrendo as últimas atas e o pacote vigente.</p>
 
       <h2>15.0. v19 — o Hub aprende com o próprio uso</h2>
       <p>Até a v18, a importação 50 saía igual à importação 1: os mesmos prompts, os mesmos erros. E tudo que você corrigia à mão morria ali — sendo que é <b>o dado mais valioso do sistema</b>, porque é você dizendo o que estava errado.</p>
@@ -2669,7 +2700,9 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
    pular direto usando Ctrl+F nesse nome. Mantenha isto atualizado quando
    mover ou renomear uma função de entrada de bloco.
 
-    1. CONFIG / ESTADO / UTILITÁRIOS — CONFIG, state, $, esc, mdRender, norm,
+    1. CONFIG / ESTADO / UTILITÁRIOS — CONFIG, state, $, esc, mdRender (markdown
+       → HTML sanitizado com DOMPurify antes de ir para innerHTML — é aqui que
+       mora a defesa contra XSS de título/comentário/página do ClickUp), norm,
        sleep, debounce, registrarErro, showMessage, openModal/closeModal,
        docUrl/pageUrl/taskUrl, linkTask, salvarProjetos/carregarProjetos.
     2. LINKS DO CLICKUP — extrairDocId, extrairContainer, valorCampo, acharCampo.
@@ -4122,11 +4155,23 @@ async function mapearBase(docId) {
     conhecimento: rCon.amplo || [], biblioteca: rBib.amplo || []
   };
 
+  /* Bug corrigido: `ultimaRef` entrava com a data de TODO registro, incluindo
+     Conhecimento e Biblioteca — que o próprio modal "Sobre" documenta como
+     "fonte, não gatilho": não deveriam contar como "presente" para decidir
+     se uma ata é retroativa (ver ehRetroativo/gateRoteamento). Um registro
+     de Conhecimento com data futura ou digitada errada empurrava `ultimaRef`
+     para frente e travava a reescrita da Situação Atual em toda ata real
+     seguinte — sem qualquer relação visível com a causa. Só ata/entregas
+     marcam "presente"; conhecimento/biblioteca continuam entrando no índice
+     reverso de backlinks abaixo, que é um propósito diferente. */
+  for (const reg of [...base.amplo.atas, ...base.amplo.entregas]) {
+    base.ultimaRef = Math.max(base.ultimaRef, reg.ts || 0);
+  }
+
   /* Índice reverso: a filha declara para frente, o Hub calcula o inverso.
      Evita reescrever a página de destino a cada nova ligação. */
   const todos = [...base.amplo.atas, ...base.amplo.entregas, ...base.amplo.conhecimento, ...base.amplo.biblioteca];
   for (const reg of todos) {
-    base.ultimaRef = Math.max(base.ultimaRef, reg.ts || 0);
     for (const r of (reg.meta?.relacoes || [])) {
       if (!base.backlinks.has(r.alvo)) base.backlinks.set(r.alvo, []);
       base.backlinks.get(r.alvo).push({ tipo: r.tipo, de: reg.meta?.id || reg.nome, pageId: reg.id });
@@ -4610,7 +4655,13 @@ function higieneResumo(an, proj) {
  * execução vira leitura de humor. Então fica o placar, e o detalhe é clique.
  */
 function placarPorArea(base, an, proj) {
-  if (!an) return '';
+  /* Bug corrigido: retornava '' em silêncio quando `an` (state.tarefas)
+     ainda não tinha carregado — a seção "📊 Placar da operação" sumia
+     inteira da 01, sem achado nem aviso, contradizendo a invariante que o
+     próprio modal "Sobre" declara ("O placar não sai. Se a 01 ficar sem
+     nenhum número de execução, ela vira opinião."). Agora a seção sempre
+     existe; na ausência de dado, ela mesma diz por quê. */
+  if (!an) return '## 📊 Placar da operação\n\n⚠️ **Board de tarefas não foi lido nesta gravação** — o placar não pôde ser calculado agora. Reabra o projeto (para reler o board) e regrave a Situação Atual para restaurar os números.\n';
   const L = [];
   const hoje = new Date().toLocaleDateString('pt-BR');
   const h = higieneResumo(an, proj);
@@ -4785,11 +4836,12 @@ function painelOperacionalMd(base, an, proj) {
  * o texto cortado é devolvido do mesmo jeito, e quem chamou pode aceitar e
  * até GRAVAR isso por inteiro sem perceber (ex.: sobrescrever a página
  * consolidada de um tema na Base ND, ou a narrativa da Situação Atual).
- * Chame logo depois de todo `await aiGenerate(...)` fora do aiTexto/aiJSON,
- * que já tratam o próprio truncamento.
+ * Chame com o `truncado` devolvido por aiGenerate() (nunca com a extinta
+ * `aiGenerate.ultimoTruncado` — essa flag estática era compartilhada por
+ * chamadas concorrentes e virou condição de corrida real, corrigida abaixo).
  */
-function avisarSeTruncado(rotulo) {
-  if (aiGenerate.ultimoTruncado) {
+function avisarSeTruncado(rotulo, truncado) {
+  if (truncado) {
     showMessage(`${rotulo}: a resposta da IA bateu no limite de tamanho e pode ter ficado incompleta no fim. Revise antes de aprovar.`, 'info');
   }
 }
@@ -4864,8 +4916,21 @@ async function aiGenerate(prompt, retries = 2) {
        Agora a informação sobe para quem chamou, que sabe o que fazer com ela
        (continuar, reduzir escopo, ou avisar). Ver `aiTexto`. */
     $('dot-ai').className = 'dot on';
-    aiGenerate.ultimoTruncado = cand?.finishReason === 'MAX_TOKENS';
-    return saida;
+    /* v34.1 · Bug corrigido: o truncamento era exposto como propriedade
+       ESTÁTICA da função (`aiGenerate.ultimoTruncado`), compartilhada por
+       TODAS as chamadas em voo. Quando várias chamadas rodam em paralelo
+       (gateExtracao dispara 4 aiJSON simultâneas, gateAuditoria dispara 2,
+       gateSentimento roda em paralelo com a redação da ata), a ordem de
+       resolução das promessas não é determinística — uma chamada podia ler
+       o resultado de truncamento de OUTRA chamada que terminou por perto,
+       não o seu próprio. Concretamente: a extração de "números" (a peça
+       mais sensível) podia ser cortada, mas a checagem via a flag
+       compartilhada via `false` (escrito por outra peça que terminou sem
+       cortar por perto) e a recuperação (repararJSONTruncado) nunca rodava
+       — números sumiam da ata em silêncio, sem relação com o conteúdo, só
+       com o timing de rede daquela vez. Devolver o resultado junto com o
+       texto, por chamada, elimina a condição de corrida por completo. */
+    return { texto: saida, truncado: cand?.finishReason === 'MAX_TOKENS' };
   }
 }
 
@@ -4956,15 +5021,19 @@ Devolva SOMENTE a continuação em markdown. Sem crase de bloco, sem comentário
  * ninguém lê.
  */
 async function aiTexto(prompt, { estrutura = '', maxCont = MAX_CONTINUACOES } = {}) {
-  let texto = await aiGenerate(prompt);
+  let r = await aiGenerate(prompt);
+  let texto = r.texto;
+  let truncado = r.truncado;
   let cont = 0;
 
-  while (aiGenerate.ultimoTruncado && cont < maxCont) {
+  while (truncado && cont < maxCont) {
     cont++;
     const cauda = texto.slice(-2500);
     let pedaco;
     try {
-      pedaco = await aiGenerate(promptContinuacao(cauda, estrutura));
+      const rc = await aiGenerate(promptContinuacao(cauda, estrutura));
+      pedaco = rc.texto;
+      truncado = rc.truncado;   // só continua de novo se ESTA continuação também cortou
     } catch (e) {
       console.warn('[Hub] continuação falhou:', e.message);
       break;
@@ -4974,7 +5043,6 @@ async function aiTexto(prompt, { estrutura = '', maxCont = MAX_CONTINUACOES } = 
     texto = costurar(texto, pedaco);
   }
 
-  const truncado = !!aiGenerate.ultimoTruncado;   // ainda cortado depois do teto
   if (cont && !truncado) {
     showMessage(`A resposta bateu no limite de saída e foi completada em ${cont} continuação(ões).`, 'info');
   } else if (truncado) {
@@ -7403,10 +7471,11 @@ async function aiJSON(prompt, fallback = null, tentativas = 2) {
          mesmo prompt que estourou o teto costuma estourar de novo. */
       const p = i === 0 ? prompt : prompt +
         '\n\nATENÇÃO: a resposta anterior foi cortada por tamanho. Devolva NO MÁXIMO 12 itens por array, priorizando os mais relevantes, e encurte cada texto para o essencial.';
-      const bruto = await aiGenerate(p, 0);
+      const r = await aiGenerate(p, 0);
+      const bruto = r.texto;
       let obj = parseJSONTolerante(bruto);
 
-      if (!obj && aiGenerate.ultimoTruncado) {
+      if (!obj && r.truncado) {
         obj = repararJSONTruncado(bruto);
         if (obj) {
           console.warn('[Hub] JSON cortado no limite — reparado com os itens completos.');
@@ -8128,19 +8197,19 @@ async function gateEsqueleto(d, markdown, ctx) {
   }
 
   regPasso(d, 'esqueleto', 'run', `${faltando.length} seção(ões) sem conteúdo — pedindo de volta…`);
-  const remendo = await aiGenerate(promptRemendo({
+  const rRemendo = await aiGenerate(promptRemendo({
     modo: d.modo, faltando, markdown, fatos: d.fatos, material: ctx.material
   }), 1).catch(() => null);
-  avisarSeTruncado('Remendo de seção');
+  if (rRemendo) avisarSeTruncado('Remendo de seção', rRemendo.truncado);
 
-  if (!remendo) {
+  if (!rRemendo) {
     d.achados.push({ severidade: 'media', tipo: 'Seção incompleta',
       texto: `${faltando.join(', ')} — sem conteúdo, e a tentativa de refazer falhou. Preencha na mão ou use o Refinar.`, onde: 'esqueleto' });
     regPasso(d, 'esqueleto', 'alerta', `${faltando.length} seção(ões) seguem vazias.`);
     return markdown;
   }
 
-  const costurado = costurarSecoes(markdown, remendo, faltando);
+  const costurado = costurarSecoes(markdown, rRemendo.texto, faltando);
   const depois = conferirEsqueleto(costurado, d.modo);
   const restam = [...depois.faltando, ...depois.vazias];
   if (restam.length) {
@@ -8701,14 +8770,14 @@ async function refinarTexto() {
   try {
     if (!state.refino) state.refino = { original: antes, rodadas: [] };
 
-    let novo = await aiGenerate(promptRefino({
+    const rNovo = await aiGenerate(promptRefino({
       modo: state.handleMode || 'registro',
       instrucao,
       markdown: antes,
       bruto: d?.ctx?.material || ''
     }));
-    avisarSeTruncado('Refino');
-    novo = String(novo || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
+    avisarSeTruncado('Refino', rNovo.truncado);
+    let novo = String(rNovo.texto || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
     if (!novo) throw new Error('O refino voltou vazio. Tente uma instrução mais específica.');
 
     /* Carimbo de âncora roda de novo: o refino pode ter reorganizado linhas. */
@@ -10974,7 +11043,7 @@ comentário. Devolva só a frase.
 """
 ${limpo.slice(0, 2000)}
 """`);
-    const f = String(r || '').replace(/\s+/g, ' ').replace(/\|/g, '/').replace(/^["']|["']$/g, '').trim();
+    const f = String(r.texto || '').replace(/\s+/g, ' ').replace(/\|/g, '/').replace(/^["']|["']$/g, '').trim();
     if (f && f.length <= 220) return f;
   } catch (e) { console.warn('[Hub] resumo de nota falhou:', e.message); }
   return limpo.slice(0, 200) + (limpo.length > 200 ? '…' : '');
@@ -12873,7 +12942,7 @@ async function publicarSituacao({ narrar = true, ataNova = null, motivo = '', na
        sobre um retrato de horas atrás é justamente o erro que esta seção não
        pode cometer. */
     await garantirContextoFresco();
-    narrativa = await aiGenerate(comMemoria(promptSituacao({
+    const rNarrativa = await aiGenerate(comMemoria(promptSituacao({
       estadoVivo: estadoVivoDaConta(base, { temas: state.radarCache }),
       anterior: base.situacao,
       ata: ataNova || (base.atas.length ? base.atas[0].conteudo : null),
@@ -12883,10 +12952,11 @@ async function publicarSituacao({ narrar = true, ataNova = null, motivo = '', na
       aprendizados: resumoAprendizados(base),
       insights: resumoInsights(base)
     })));
+    narrativa = rNarrativa.texto;
     /* Este caminho publica direto na 01, sem tela de revisão (ao contrário
        de revisarSituacao(), que passa por aprovação) — se cortar no teto de
        saída, é a única rede de segurança antes de ir pro ClickUp. */
-    avisarSeTruncado('Situação Atual');
+    avisarSeTruncado('Situação Atual', rNarrativa.truncado);
   } else {
     // Preserva a narrativa anterior, removendo apenas os blocos calculados antigos.
     narrativa = extrairNarrativa(base.situacao);
@@ -13137,11 +13207,12 @@ async function promoverParaGlobal({ tema, siglas, titulo, dataBr, dataIso, areas
   const nomeTema = `${pref}${tema}`.trim();
 
   aviso?.('Gerando versão genérica…');
-  const generico = await aiGenerate(promptRegistroGlobal({
+  const rGenerico = await aiGenerate(promptRegistroGlobal({
     tema: nomeTema, titulo, dataBr, areas: (areas || []).join(', '),
     registroCliente: conteudoCliente, soDiretriz
   }));
-  avisarSeTruncado('Versão genérica para a Base ND');
+  const generico = rGenerico.texto;
+  avisarSeTruncado('Versão genérica para a Base ND', rGenerico.truncado);
 
   let temaRef = acharTema(g, tema);
   if (!temaRef) {
@@ -13182,14 +13253,15 @@ async function promoverParaGlobal({ tema, siglas, titulo, dataBr, dataIso, areas
   aviso?.('Mesclando no tema…');
   const atual = temaRef.conteudo || await lerConteudoPagina(GDOC(), temaRef.id).catch(() => '');
   const indice = `| Data | Registro |\n|---|---|\n| ${dataBr} | ${regId ? `[${titulo}](${pageUrl(GDOC(), regId)})` : titulo} |`;
-  const consolidado = await aiGenerate(promptTemaConsolidado({
+  const rConsolidado = await aiGenerate(promptTemaConsolidado({
     tema: nomeTema, consolidadoAtual: extrairNarrativa(atual), registroNovo: generico, indice
   }));
+  const consolidado = rConsolidado.texto;
   /* Maior blast radius do arquivo: esta página é compartilhada entre TODAS
      as contas (Base ND), e é sobrescrita por inteiro (editarPagina 'replace',
      logo abaixo). Um corte aqui apaga conhecimento consolidado de outras
      contas sem qualquer aviso, se não fosse este check. */
-  avisarSeTruncado('Consolidado do tema na Base ND');
+  avisarSeTruncado('Consolidado do tema na Base ND', rConsolidado.truncado);
 
   const cabTemaNovo = blocoMetadados({
     tipoDoc: 'Tema de método', id: `global/tema/${slug(tema)}`,
@@ -14438,9 +14510,9 @@ async function refinarPauta() {
   const antes = $('pto-editor').value;
   try {
     if (!state.refinoPauta) state.refinoPauta = { original: antes, rodadas: [] };
-    let novo = await aiGenerate(promptRefino({ modo: 'pauta', instrucao, markdown: antes, bruto: '' }));
-    avisarSeTruncado('Refino da pauta');
-    novo = String(novo || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
+    const rNovo = await aiGenerate(promptRefino({ modo: 'pauta', instrucao, markdown: antes, bruto: '' }));
+    avisarSeTruncado('Refino da pauta', rNovo.truncado);
+    let novo = String(rNovo.texto || '').replace(/^```(?:markdown|md)?\s*/i, '').replace(/```\s*$/, '').trim();
     if (!novo) throw new Error('o refino voltou vazio');
 
     state.refinoPauta.rodadas.push({
@@ -16257,7 +16329,7 @@ async function perguntarBase() {
   $('qa-resposta').innerHTML = `<div class="loading"><span class="spinner lg"></span></div>`;
 
   try {
-    const resposta = await aiGenerate(`Você responde perguntas usando SOMENTE a base de conhecimento abaixo, do projeto ${projetoAtual()?.nome || ''}.
+    const rResposta = await aiGenerate(`Você responde perguntas usando SOMENTE a base de conhecimento abaixo, do projeto ${projetoAtual()?.nome || ''}.
 
 REGRAS
 - Responda em markdown, direto, sem preâmbulo.
@@ -16271,7 +16343,8 @@ ${contextoDaBase(base)}
 
 [PERGUNTA]
 ${pergunta}`);
-    avisarSeTruncado('Resposta');
+    const resposta = rResposta.texto;
+    avisarSeTruncado('Resposta', rResposta.truncado);
     $('qa-resposta').innerHTML = mdRender(resposta);
     /* v22 · guarda o MARKDOWN, não o HTML renderizado. Copiar o que está na
        tela devolveria texto sem formatação; o markdown cola formatado no
