@@ -3400,16 +3400,41 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 
 const mdRender = (s) => {
   if (!s || !String(s).trim()) return '';
-  let html = marked.parse(String(s));
-  /* Sanitização obrigatória: `s` normalmente carrega conteúdo do ClickUp
-     (título/comentário/página, editável por qualquer membro do workspace)
-     ou texto gerado por IA a partir de material colado/transcrito — ambos
-     fora do nosso controle. marked.parse() NÃO sanitiza HTML embutido no
+  let html;
+  try {
+    html = marked.parse(String(s));
+  } catch (e) {
+    /* Bug corrigido: se marked.js não carregou (CDN bloqueado, sem rede,
+       CSP do iframe do ClickUp impedindo o script externo), esta função
+       lançava e quebrava toda tela que chamasse mdRender — a maioria do
+       Hub. Em vez de travar a ferramenta inteira, mostra o texto cru. */
+    console.error('[Hub] marked.js indisponível — renderizando texto simples, sem formatação.', e);
+    return `<pre style="white-space:pre-wrap;font-family:inherit">${esc(String(s))}</pre>`;
+  }
+  /* Sanitização: `s` normalmente carrega conteúdo do ClickUp (título/
+     comentário/página, editável por qualquer membro do workspace) ou texto
+     gerado por IA a partir de material colado/transcrito — ambos fora do
+     nosso controle. marked.parse() NÃO sanitiza HTML embutido no
      markdown-fonte; sem este passo, o resultado vai direto para innerHTML
      em vários pontos do Hub e um payload tipo <img src=x onerror=...>
      executaria no contexto da aplicação (que mantém o token do ClickUp
      em memória) para qualquer pessoa que abrir o mesmo registro. */
-  html = DOMPurify.sanitize(html);
+  if (typeof DOMPurify !== 'undefined' && DOMPurify?.sanitize) {
+    html = DOMPurify.sanitize(html);
+  } else {
+    /* Bug corrigido: chamar DOMPurify.sanitize(html) direto, sem checar se a
+       biblioteca carregou, lançava ReferenceError toda vez que o CDN
+       (cdn.jsdelivr.net) estivesse inacessível — e como mdRender roda em
+       quase toda tela do Hub (Situação Atual, atas, notas, radar, preview),
+       isso derrubava a ferramenta inteira por causa de UMA biblioteca
+       externa. Uma proteção de segurança que falha ao carregar nunca pode
+       quebrar a aplicação — degrada com aviso bem visível em vez de travar. */
+    console.error('[Hub] DOMPurify não carregou — este HTML NÃO foi sanitizado. Verifique a conexão com cdn.jsdelivr.net.');
+    if (!state._avisouSemSanitizacao) {
+      state._avisouSemSanitizacao = true;
+      showMessage('Aviso de segurança: a biblioteca de sanitização (DOMPurify) não carregou — o conteúdo está sendo exibido sem essa proteção. Verifique sua conexão e recarregue a página.', 'error');
+    }
+  }
   // O Hub roda dentro de iframe: sem isto, clicar num link do ClickUp
   // navegaria a própria ferramenta e perderia o estado da tela.
   html = html.replace(/<a\s+href=/g, '<a target="_blank" rel="noopener" href=');
