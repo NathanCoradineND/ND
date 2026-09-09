@@ -6,10 +6,21 @@
 <title>Hub de Conhecimento | Nação Digital</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<!-- Sanitiza o HTML que o marked.js produz antes de ir para innerHTML.
+     Sem isto, título/comentário/página do ClickUp (editável por qualquer
+     membro do workspace) ou texto gerado por IA a partir de material colado
+     podem conter HTML/JS ativo (ex.: <img onerror=...>) e rodar no contexto
+     do Hub, que mantém o token do ClickUp em memória (XSS armazenado). -->
+<script src="https://cdn.jsdelivr.net/npm/dompurify/dist/purify.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 
 <style>
+/* Sistema de tokens de cor/tipografia/raio. Use SEMPRE estas variáveis em
+   vez de valor hexadecimal solto — há trechos legados com cor hardcoded
+   (ex.: alguns componentes .hm-*/.rf-* e estilos inline pontuais) que
+   deveriam ter sido escritos com var(--field)/var(--g2)/etc.; ao tocar
+   nesse CSS, prefira migrar para o token em vez de repetir o hex. */
 :root {
   --nd: #7B3FE4; --nd-l: #9B6AEF; --nd-d: #5A2DB8;
   --bg: #0A0A0A; --card: #161728; --card-h: #1E2038; --field: #10111f;
@@ -609,9 +620,44 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
 </head>
 <body>
 
+<!-- ==========================================================================
+     MAPA DO MARKUP — telas e modais deste arquivo, na ordem em que aparecem.
+     Use Ctrl+F no id para pular direto.
+     --------------------------------------------------------------------------
+     TELAS PRINCIPAIS (alternadas via atributo `hidden`)
+       #view-home           · grid de contas/projetos, com busca (#home-search)
+       #view-project        · dashboard de uma conta: KPIs, Situação Atual,
+                              Notas, Memória, Radar, Painel operacional,
+                              Últimas atas, Últimos pacotes, Conhecimento &
+                              Biblioteca
+
+     MODAIS (cada um é uma div.modal-overlay, identificada pelo id abaixo)
+       #modal-portfolio     · lista/criação de base de conhecimento por cliente
+       #modal-conexao       · credenciais ClickUp/Gemini, operador, workspace
+       #modal-sobre         · documentação da arquitetura do produto (estática)
+       #modal-gerador       · gerador único de documento (pauta ou report)
+       #modal-report-out    · saída/edição/refino do report gerado
+       #modal-pauta-out     · saída/edição/refino da pauta gerada
+       #modal-import        · importar ata (transcrição → registro)
+       #modal-entregas      · importar pacote de entregas/planejamento
+       #modal-conhecimento  · importar para 02 · Conhecimento & Dados
+       #modal-biblioteca    · importar para 05 · Biblioteca Operacional
+       #modal-pergunta      · "Pergunte à base" (Q&A sobre o conteúdo gravado)
+       #modal-global        · Base ND (agência), 06 · Memória Operacional
+       #modal-handle        · tela única de revisão/aprovação (gates, editar/
+                              preview/refinar) — usada por ata/entregas/
+                              conhecimento/biblioteca/situação
+       #modal-colisao       · gate de colisão ("isso já existe na base?")
+       #modal-pipeline      · overlay de progresso dos gates
+       #modal-conciliacao   · concilia tarefas do ClickUp vs. combinados
+       #modal-ambiente      · auditoria local da estrutura da conta
+       #modal-gestao        · gestão do board (higiene + correção em lote)
+       #modal-leitura       · leitor genérico de documento/página
+   ========================================================================== -->
+
 <header class="header">
   <div class="header-inner">
-    <div class="brand" onclick="goHome()" role="button" tabindex="0" onkeydown="if(event.key==='Enter')goHome()">
+    <div class="brand" onclick="goHome()" role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome();}">
       <div class="brand-mark">ND</div>
       <div class="brand-txt">
         <h1>Hub de Conhecimento</h1>
@@ -641,7 +687,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
         <div class="sec-eye">Portfólio de projetos ativos</div>
         <h1 class="sec-h1">Bases de conhecimento</h1>
       </div>
-      <input type="search" class="search" id="home-search" placeholder="Filtrar projeto…" oninput="renderHome()">
+      <input type="search" class="search" id="home-search" aria-label="Filtrar projeto" placeholder="Filtrar projeto…" oninput="renderHome()">
     </div>
     <div class="grid-projects" id="projects-grid"></div>
   </section>
@@ -882,7 +928,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
           <input type="text" id="cfg-pf-list" spellcheck="false">
         </div>
         <div>
-          <label>Motor de IA</label>
+          <label for="cfg-gemini-key">Motor de IA (Gemini)</label>
           <div class="hint" style="margin-top:0">
             Gemini. No Canvas a chave é injetada pelo ambiente — não preencha nada aqui.
           </div>
@@ -1778,7 +1824,7 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
     </div>
     <div class="hm-footer">
       <button class="btn btn-ghost" onclick="closeModal('modal-entregas')">Cancelar</button>
-      <button class="btn btn-primary" id="btn-gerar-entregas" style="background-color:var(--med);border-color:var(--med)" onclick="processarEntregas()">✨ Estruturar Pacote</button>
+      <button class="btn btn-primary" id="btn-gerar-entregas" style="background-color:var(--med);border-color:var(--med);color:#0d2b4e" onclick="processarEntregas()">✨ Estruturar Pacote</button>
     </div>
   </div>
 </div>
@@ -2608,6 +2654,103 @@ textarea.transc-area { min-height: 150px; font-family: var(--mono); font-size: 1
       redige, o código conta" só passou a valer quando o código releu o texto.
    ============================================================================ */
 
+/* ============================================================================
+   MAPA DO ARQUIVO — onde procurar cada coisa (v34)
+   ----------------------------------------------------------------------------
+   Um único <script> de ~13.800 linhas. Este mapa lista os blocos na ordem em
+   que aparecem no arquivo, com o nome da primeira função de cada um — dá pra
+   pular direto usando Ctrl+F nesse nome. Mantenha isto atualizado quando
+   mover ou renomear uma função de entrada de bloco.
+
+    1. CONFIG / ESTADO / UTILITÁRIOS — CONFIG, state, $, esc, mdRender, norm,
+       sleep, debounce, registrarErro, showMessage, openModal/closeModal,
+       docUrl/pageUrl/taskUrl, linkTask, salvarProjetos/carregarProjetos.
+    2. LINKS DO CLICKUP — extrairDocId, extrairContainer, valorCampo, acharCampo.
+    3. TRANSPORTE CLICKUP (fila/rate-limit) — FILA, pegarVaga/liberarVaga, cu().
+    4. PORTFÓLIO — lerPortfolio, sincronizarPortfolio, abrirPortfolio, criarBase.
+    5. METADADOS DE PÁGINA — extrairTasksCitadas, slug, gerarId, nomePagina,
+       blocoMetadados, inferirRelacoes, lerMetadados, brParaTs.
+    6. MAPEAMENTO DA BASE — desembrulharPaginas, achatar, lerArvore,
+       lerConteudoPagina, acharAncora, mapearBase (função central: monta o
+       objeto `base` inteiro a partir da árvore de páginas do ClickUp Doc).
+    7. SANEAMENTO/GRAVAÇÃO DE MARKDOWN — sanitizarTabelas, prepararConteudo,
+       criarPagina, editarPagina, garantirAncora.
+    8. TAREFAS DO CLICKUP — tarefasDaLista, lerTarefas, classificar, parseSprint,
+       classificarListas, areaDaTask, analisarTarefas, abertasDe, paradasDe,
+       capacidadePorResponsavel.
+    9. SITUAÇÃO ATUAL / PAINEL CALCULADO (sem IA) — higieneResumo,
+       placarPorArea, painelOperacionalMd.
+   10. IA / GEMINI — aiGenerate (chamada crua, com corte de prompt e retry),
+       caudaIncompleta, costurar, promptContinuacao, aiTexto (continuação
+       automática quando a resposta bate no teto de tokens de saída).
+   11. PROMPTS REUTILIZADOS — REGRAS_MD, REGRAS_DADOS, promptAta, blocoClimaMd,
+       promptEntregas, promptAprendizado, promptRelatorio, promptSituacao,
+       promptPauta.
+   12. ANCORAGEM TRANSCRIÇÃO↔ATA — separarFontes, fatiarEmTrechos,
+       indexarMaterial, casarEvidencias, carimbarAncoras (detector de
+       alucinação local: evidência que a IA cita precisa bater com um trecho
+       literal da transcrição).
+   13. TRAVA DE CONCORRÊNCIA — operadorAtual, definirOperador, carimboEdicao,
+       conferirConflito, gravarComTrava (evita que duas pessoas sobrescrevam
+       uma à outra em silêncio).
+   14. MEMÓRIA DO HUB — lerSinais/gravarSinais, registrarSinal,
+       coletarSinaisDaGravacao, parseMemoria, destilarMemoria, escreverMemoria,
+       bootstrapMemoria (observa → destila → aplica: o Hub aprende convenções
+       da conta com o próprio uso).
+   15. CONTEXTO POR ESTADO — estadoDaSecao, contextoVivo, estadoVivoDaConta,
+       garantirContextoFresco (relê board/base antes de redigir, para não
+       trabalhar sobre um retrato velho de horas).
+   16. RADAR DE TEMAS / SAÚDE DA CONTA — classificarTema, calcularRadar,
+       calcularSaudeConta, renderRadarCard, radarMd (temperatura comercial,
+       dores, riscos e lacunas de documentação).
+   17. PIPELINE DE GATES — novoDossie, rodarGates (orquestrador), gateExtracao,
+       gateAncoragem, gateEsqueleto, gateSentimento, gateAuditoria, gateEfeitos,
+       gateColisao. Cada gate é uma chamada de IA pequena conferida por código
+       determinístico depois — ver changelog v18 acima para o porquê.
+   18. REFINO DIRIGIDO E TELA DE COLISÃO — refinarTexto, renderColisao,
+       aplicarColisao.
+   19. CONCILIAÇÃO DE TAREFAS COM O CLICKUP — conciliarTarefas,
+       renderConciliacao, criarTarefasSelecionadas, carimbarTarefasNaOrigem.
+   20. CAMADA DE AGÊNCIA (BASE ND) — mapearGlobal, promoverParaGlobal,
+       publicarRadarND, docTecnicaMd (documentação técnica publicada dentro
+       da própria Base ND — ver O3/AUTODOCUMENTAÇÃO no changelog v20).
+   21. DASHBOARD / HOME / BASE DA CONTA — renderHome, abrirProjeto,
+       recarregarBase, renderBase.
+   22. NOTAS DA CONTA — renderNotasCard, lerTabelaNotas, montarTabelaNotas.
+   23. DITAR/ANEXAR ÁUDIO (v34) — ditar (Web Speech API), transcreverAudio,
+       anexarAudio.
+   24. IDENTIDADE E LOG DE USO — usuarioAtual, registrarUso, montarTrilha.
+   25. GESTÃO DO BOARD (higiene + capacidade, v22) — abrirGestao, renderGestao,
+       linhaGestao, reconciliarGestao, aplicarLoteGestao.
+   26. REVISAR AMBIENTE (auditoria local, v22) — auditarAmbiente,
+       revisarAmbiente. 100% local, sem chamada de IA.
+   27. LEITURA DE PÁGINAS / EXTRAÇÃO DE ARQUIVOS — verPagina, extrairArquivo
+       (pdf.js/mammoth/VTT-SRT), handleFileUpload.
+   28. IMPORTAR ATA — processarAta, aprovarEGravarAta.
+   29. PACOTES DE ENTREGAS (04) — processarEntregas, aprovarEGravarEntregas.
+   30. CONHECIMENTO / DADOS (02) — processarConhecimento,
+       aprovarEGravarConhecimento.
+   31. PUBLICAR SITUAÇÃO ATUAL (01) — publicarSituacao,
+       publicarPainelOperacional.
+   32. HANDLE ROUTER (modal de revisão único) — abrirHandle,
+       aprovarEGravarRoteador, aninharMaterial (usado por ata/entregas/
+       conhecimento/biblioteca).
+   33. GERADOR ÚNICO (PAUTA/REPORT, v26/v27) — abrirGerador, gerarDocumento.
+   34. PAUTA COM GATES (v26) — gerarPautaComGates, salvarPauta.
+   35. MOTOR DE REPORT (v24/v25/v26) — compilarReport (sem IA: atas, entregas,
+       saldo do período), rodarPipelineReport, gerarReport.
+   36. BIBLIOTECA OPERACIONAL (05) — processarBiblioteca,
+       aprovarEGravarBiblioteca.
+   37. REVISAR SITUAÇÃO / PERGUNTE À BASE / BOOT — revisarSituacao,
+       perguntarBase (Q&A sobre a base do cliente), salvarConexao, init()
+       (bootstrap chamado em DOMContentLoaded, no fim do arquivo).
+
+   Documentação do PRODUTO (arquitetura, decisões, limitações aceitas) fica
+   fora do código: é o próprio modal "Sobre" no HTML (id="modal-sobre") e,
+   para a equipe, a página técnica que o Hub publica na Base ND (ver
+   docTecnicaMd, item 20). Este mapa é só para achar código.
+   ============================================================================ */
+
 const apiKey = "";
 const GEMINI_MODEL = "gemini-2.5-flash-preview-09-2025";
 
@@ -3218,6 +3361,15 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&
 const mdRender = (s) => {
   if (!s || !String(s).trim()) return '';
   let html = marked.parse(String(s));
+  /* Sanitização obrigatória: `s` normalmente carrega conteúdo do ClickUp
+     (título/comentário/página, editável por qualquer membro do workspace)
+     ou texto gerado por IA a partir de material colado/transcrito — ambos
+     fora do nosso controle. marked.parse() NÃO sanitiza HTML embutido no
+     markdown-fonte; sem este passo, o resultado vai direto para innerHTML
+     em vários pontos do Hub e um payload tipo <img src=x onerror=...>
+     executaria no contexto da aplicação (que mantém o token do ClickUp
+     em memória) para qualquer pessoa que abrir o mesmo registro. */
+  html = DOMPurify.sanitize(html);
   // O Hub roda dentro de iframe: sem isto, clicar num link do ClickUp
   // navegaria a própria ferramenta e perderia o estado da tela.
   html = html.replace(/<a\s+href=/g, '<a target="_blank" rel="noopener" href=');
@@ -3280,8 +3432,6 @@ const docUrl  = (docId) => `https://app.clickup.com/${state.workspaceId}/v/dc/${
 const pageUrl = (docId, pageId) => `${docUrl(docId)}/${pageId}`;
 const taskUrl = (taskId) => `https://app.clickup.com/t/${taskId}`;
 
-/** Link markdown para uma página da base. É o que torna a relação clicável. */
-const linkPagina = (docId, pageId, rotulo) => pageId ? `[${rotulo}](${pageUrl(docId, pageId)})` : rotulo;
 const linkTask = (id, rotulo) => `[${rotulo}](${taskUrl(id)})`;
 
 function salvarProjetos() { try { localStorage.setItem(CONFIG.storageKey, JSON.stringify(state.projetos)); } catch (_) {} }
@@ -3340,7 +3490,10 @@ function acharCampo(campos, chaves) {
    listas paginadas estoura isso em segundos e volta 429 em cascata. A fila
    abaixo espaça as chamadas e limita a concorrência: qualquer Promise.all do
    código passa a ser serializado por ela, sem precisar reescrever os fluxos. */
-const FILA = { espacoMs: 700, ultimo: 0, emVoo: 0, fila: Promise.resolve() };
+/* `emVoo` conta chamadas em voo mas hoje nenhum código lê esse valor — fica
+   reservado para uma futura trava de concorrência simultânea; não é bug,
+   só não tem consumidor ainda. */
+const FILA = { espacoMs: 700, espacoBaseMs: 700, ultimo: 0, ultimoBackoff: 0, emVoo: 0, fila: Promise.resolve() };
 
 /**
  * Serializa o cálculo do espaçamento numa cadeia de promessas. Sem isso, várias
@@ -3353,6 +3506,14 @@ function pegarVaga() {
   FILA.fila = new Promise(r => { liberarProximo = r; });
   return (async () => {
     await anterior;
+    /* Bug corrigido: `espacoMs` só subia (ver o 429 em cu(), abaixo) e nunca
+       recuava — um pico transitório de rate limit deixava TODAS as chamadas
+       da sessão permanentemente mais lentas, mesmo minutos depois de o
+       limite ter sido liberado. Passados 30s sem novo 429, relaxa um passo
+       por vez de volta ao espaçamento normal. */
+    if (FILA.espacoMs > FILA.espacoBaseMs && Date.now() - FILA.ultimoBackoff > 30000) {
+      FILA.espacoMs = Math.max(FILA.espacoBaseMs, FILA.espacoMs - 150);
+    }
     const desde = Date.now() - FILA.ultimo;
     if (desde < FILA.espacoMs) await sleep(FILA.espacoMs - desde);
     FILA.ultimo = Date.now();
@@ -3393,6 +3554,7 @@ async function cu(path, { method = 'GET', body, retries = 2 } = {}) {
     if (res.status === 429) {
       const espera = +(res.headers.get('retry-after') || 0) * 1000 || 2000 * (i + 1);
       FILA.espacoMs = Math.min(FILA.espacoMs + 150, 1500);   // desacelera de vez
+      FILA.ultimoBackoff = Date.now();                        // marca quando, pra poder relaxar depois (pegarVaga)
       await sleep(espera); continue;
     }
     if (res.status >= 500) { await sleep(700 * (i + 1)); continue; }
@@ -3603,11 +3765,6 @@ function nomePagina(rotuloTipo, { dataBr, titulo, indice, siglas } = {}) {
   if (titulo) cauda.push(String(titulo).trim());
   const sig = (siglas && siglas.length) ? ` [${siglas.join('][')}]` : '';
   return (cauda.length ? `${cabeca} — ${cauda.join(' · ')}` : cabeca).trim() + sig;
-}
-
-/** Rótulo humano do tipo, sem emoji — usado no nome e no cabeçalho. */
-function rotuloLimpo(txt) {
-  return String(txt || '').replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\uFE0F]/gu, '').trim();
 }
 
 /**
@@ -4070,13 +4227,19 @@ async function garantirAncora(base, chave) {
  */
 async function tarefasDaLista(listId, incluirFechadas = false) {
   const acc = [];
+  let truncou = true;
   for (let page = 0; page < CONFIG.maxPaginasLista; page++) {
     const q = `subtasks=true&include_closed=${incluirFechadas}&archived=false&page=${page}`;
     const r = await cu(`/v2/list/${listId}/task?${q}`);
     const lote = r?.tasks || [];
     acc.push(...lote);
-    if (r?.last_page || lote.length < 100) break;
+    if (r?.last_page || lote.length < 100) { truncou = false; break; }
   }
+  /* Bug corrigido: teto de CONFIG.maxPaginasLista*100 (hoje 600) tarefas por
+     lista era aplicado em silêncio — diferente de lerArvore(), que avisa
+     quando a base é grande. Numa lista com mais itens abertos que isso, o
+     painel de higiene/capacidade sub-relatava o resto sem qualquer aviso. */
+  if (truncou) showMessage(`Lista com mais de ${acc.length} tarefas: só as ${acc.length} primeiras foram lidas.`, 'info');
   return acc;
 }
 
@@ -4131,10 +4294,14 @@ function parseSprint(nomeLista) {
     const p = String(txt).trim().match(/(\d{1,2})\s*[\/.]\s*(\d{1,2})/);
     if (!p) return null;
     let a = +p[1], b = +p[2];
-    // Convenção esperada: dd/mm. Se o primeiro número não puder ser dia, inverte e sinaliza.
-    if (a > 12 && b <= 12) return new Date(ano, b - 1, a).getTime();
-    if (b > 12 && a <= 12) { ambiguo = true; return new Date(ano, a - 1, b).getTime(); }
-    return new Date(ano, b - 1, a).getTime();
+    /* Bug corrigido: a versão anterior marcava `ambiguo` no caso que na
+       verdade tem só uma leitura possível (b>12 força a=mês) e nunca
+       marcava no caso genuinamente ambíguo (os dois ≤12, onde dd/mm e
+       mm/dd são igualmente válidos). Convenção esperada: dd/mm. */
+    if (a > 12 && b > 12) return null;            // nenhum dos dois pode ser mês — data inválida
+    if (b > 12) return new Date(ano, a - 1, b).getTime(); // só `a` pode ser mês: única leitura possível
+    if (a <= 12) ambiguo = true;                  // ambos cabem como dia OU mês — ambíguo de verdade
+    return new Date(ano, b - 1, a).getTime();     // convenção padrão dd/mm
   };
 
   const ini = dia(partes[0]), fim = dia(partes[1]);
@@ -4211,6 +4378,12 @@ function analisarTarefas(brutas, listas) {
       id: t.id, nome: t.name, status: t.status?.status || '—', bucket, area,
       dono: assignees.map(a => a.username).join(', '),
       donoIds: assignees.map(a => a.id).filter(Boolean),
+      /* Par id+nome preservado 1:1, sem passar por dois arrays filtrados
+         separadamente (dono/donoIds perdem o alinhamento quando um
+         assignee não tem `id` — convidado externo, usuário removido do
+         workspace). Usado por capacidadePorResponsavel para não montar
+         nome errado via índice cruzado entre os dois arrays. */
+      donoPares: assignees.filter(a => a.id).map(a => ({ id: a.id, nome: a.username })),
       prazo, atualizada,
       lista: t.list?.name || '',
       estimado: +(t.time_estimate || 0),
@@ -4309,8 +4482,12 @@ function capacidadePorResponsavel(an) {
   for (const t of abertasDe(an)) {
     /* Tarefa com dois responsáveis conta para os dois: a carga é real para
        ambos, e somar as linhas não é o objetivo — comparar pessoas é. */
-    const alvos = t.donoIds.length
-      ? t.donoIds.map(id => linha(id, (t.dono.split(', ')[t.donoIds.indexOf(id)] || `usuário ${id}`)))
+    /* Bug corrigido: reconstruir o nome via `t.dono.split(', ')[t.donoIds.indexOf(id)]`
+       desalinha quando um assignee não tem `id` (convidado externo, usuário
+       removido) — `dono` inclui todos os nomes, `donoIds` só os que têm id,
+       arrays de tamanhos diferentes. `donoPares` já vem 1:1. */
+    const alvos = t.donoPares.length
+      ? t.donoPares.map(p => linha(p.id, p.nome || `usuário ${p.id}`))
       : [linha(null, 'Sem responsável')];
 
     for (const r of alvos) {
@@ -4360,8 +4537,6 @@ function capacidadePorResponsavel(an) {
 }
 
 const horas = (ms) => ms ? Math.round(ms / 360000) / 10 : 0;
-
-function resumirTarefas(brutas) { return analisarTarefas(brutas, []); }
 
 /**
  * Tarefas em aberto no formato que a IA deve copiar: nome já como link markdown.
@@ -6240,7 +6415,17 @@ async function garantirContextoFresco({ forcar = false, maxIdadeMin = 12 } = {})
   if (!forcar && idade < maxIdadeMin) return false;
 
   try {
-    if (proj.pastaId) state.tarefas = await analisarTarefas(proj.pastaId);
+    /* Bug corrigido: usava `proj.pastaId` (campo que não existe — o
+       correto é `folderId`) e passava o ID da pasta direto para
+       analisarTarefas(), que espera um array de tarefas já lidas. O `if`
+       nunca era verdadeiro, então o board de tarefas nunca era atualizado
+       aqui — só a árvore de páginas (abaixo) era. Padrão correto conferido
+       em recarregarBase(), que usa lerTarefas(folderId, folderTipo) antes
+       de analisarTarefas(). */
+    if (proj.folderId) {
+      const r = await lerTarefas(proj.folderId, proj.folderTipo);
+      state.tarefas = await analisarTarefas(r.tarefas, r.listas);
+    }
     if (forcar || idade > 45) {
       state.base = await mapearBase(proj.docId);
       state.baseCarregadaEm = Date.now();
@@ -6700,7 +6885,12 @@ function serieDeClima(base, { limite = 10 } = {}) {
 function saudeDaImportacao(base) {
   const linhas = (parseMemoria(base?.memoria || '').qualidade || []).slice(-4);
   const pontos = linhas.map(l => {
-    const num = (re) => { const m = String(l).match(re); return m ? +m[1] : null; };
+    /* Bug corrigido: número em pt-BR usa vírgula decimal (ex.: "1,5 achados/doc",
+       formato produzido por toLocaleString('pt-BR') em outros pontos do
+       arquivo). `+'1,5'` é NaN, não 1.5 — sem a troca de vírgula por ponto
+       abaixo, o card de saúde da conta caía silenciosamente no ramo "bom"
+       (NaN não passa em nenhuma comparação >=) e mostrava "NaN achado(s)". */
+    const num = (re) => { const m = String(l).match(re); return m ? +m[1].replace(',', '.') : null; };
     return {
       linha: String(l),
       achados: num(/([\d.,]+)\s*achado/i),
@@ -6839,6 +7029,11 @@ function renderRadarCard(base, proj) {
   const s = calcularSaudeConta(base);
   const temas = calcularRadar(base, { janelaDias: CONFIG.radar.janelaDias });
   state.saude = s;
+  /* Cache do radar para priorização de memória/contexto (ver contextoVivo).
+     Gravado aqui porque é o mesmo cálculo que recarregarBase() faria de
+     novo logo em seguida sobre a mesma base — evita computar calcularRadar()
+     duas vezes na mesma passagem de render. */
+  state.radarCache = temas.temas;
   const dores = [...s.dores, ...s.necessidades];
 
   const sub = $('radar-sub');
@@ -6921,14 +7116,17 @@ function radarMd(base, proj) {
     L.push('|---|---|---|---|');
     s.serie.forEach(c => {
       const t = TEMPERATURAS[c.temperatura] || TEMPERATURAS.neutro;
-      L.push(`| ${c.url ? `[${c.nome}](${c.url})` : c.nome} | ${c.data} | ${t.icone} ${t.rotulo} | ${c.leitura || '—'} |`);
+      /* esc() no que vem de ata/IA: título de reunião e leitura de clima
+         podem carregar trecho literal citado da transcrição — texto fora
+         do nosso controle, indo para uma tabela markdown. */
+      L.push(`| ${c.url ? `[${esc(c.nome)}](${c.url})` : esc(c.nome)} | ${c.data} | ${t.icone} ${t.rotulo} | ${esc(c.leitura) || '—'} |`);
     });
     L.push('');
     const tensas = s.serie.filter(c => c.tensao?.length);
     if (tensas.length) {
       L.push('**Trechos de tensão registrados**');
       L.push('');
-      tensas.slice(0, 4).forEach(c => c.tensao.slice(0, 2).forEach(t => L.push(`- ${c.data} — ${t}`)));
+      tensas.slice(0, 4).forEach(c => c.tensao.slice(0, 2).forEach(t => L.push(`- ${c.data} — ${esc(t)}`)));
       L.push('');
     }
   } else {
@@ -6951,7 +7149,7 @@ function radarMd(base, proj) {
     L.push('| Sinal | Reunião | Data |');
     L.push('|---|---|---|');
     s.oportunidades.forEach(o =>
-      L.push(`| ${o.txt} | ${o.url ? `[${o.nome}](${o.url})` : o.nome} | ${o.data} |`));
+      L.push(`| ${esc(o.txt)} | ${o.url ? `[${esc(o.nome)}](${o.url})` : esc(o.nome)} | ${o.data} |`));
     L.push('');
     L.push(`> ${s.nivel === 'risco' || s.nivel === 'atencao'
       ? '⚠️ **Atenção à sequência:** há sinal comercial aberto numa conta com relacionamento tensionado. Endereçar a dor vem antes de propor escopo novo — proposta em cima de insatisfação lê como oportunismo.'
@@ -6970,7 +7168,7 @@ function radarMd(base, proj) {
     L.push('');
     L.push('| Risco | Reunião | Data |');
     L.push('|---|---|---|');
-    s.riscosComerciais.forEach(x => L.push(`| ${x.txt} | ${x.url ? `[${x.nome}](${x.url})` : x.nome} | ${x.data} |`));
+    s.riscosComerciais.forEach(x => L.push(`| ${esc(x.txt)} | ${x.url ? `[${esc(x.nome)}](${x.url})` : esc(x.nome)} | ${x.data} |`));
     L.push('');
   }
   if (s.falhasProcesso?.length) {
@@ -6978,7 +7176,7 @@ function radarMd(base, proj) {
     L.push('');
     L.push('_O que deu errado no fluxo de trabalho. Diferente de dor: aqui o conserto é de operação, não de relacionamento._');
     L.push('');
-    s.falhasProcesso.forEach(x => L.push(`- **${x.txt}** — ${x.data}${x.url ? ` · [${x.nome}](${x.url})` : ''}`));
+    s.falhasProcesso.forEach(x => L.push(`- **${esc(x.txt)}** — ${x.data}${x.url ? ` · [${esc(x.nome)}](${x.url})` : ''}`));
     L.push('');
   }
 
@@ -6988,7 +7186,7 @@ function radarMd(base, proj) {
   else {
     L.push('| Dor | Reunião | Data |');
     L.push('|---|---|---|');
-    s.dores.forEach(d => L.push(`| ${d.txt} | ${d.url ? `[${d.nome}](${d.url})` : d.nome} | ${d.data} |`));
+    s.dores.forEach(d => L.push(`| ${esc(d.txt)} | ${d.url ? `[${esc(d.nome)}](${d.url})` : esc(d.nome)} | ${d.data} |`));
   }
   L.push('');
 
@@ -6997,7 +7195,7 @@ function radarMd(base, proj) {
     L.push('');
     L.push('_O cliente mencionou uma falta e ela não virou pedido formal. É o material mais barato de transformar em escopo._');
     L.push('');
-    s.necessidades.forEach(n => L.push(`- **${n.txt}** — ${n.data}${n.url ? ` · [${n.nome}](${n.url})` : ''}`));
+    s.necessidades.forEach(n => L.push(`- **${esc(n.txt)}** — ${n.data}${n.url ? ` · [${esc(n.nome)}](${n.url})` : ''}`));
     L.push('');
   }
 
@@ -8827,6 +9025,11 @@ function prazoParaMs(txt) {
   let ano = m[3] ? +m[3] : new Date().getFullYear();
   if (ano < 100) ano += 2000;
   const d = new Date(ano, mes - 1, dia, 18, 0, 0, 0);
+  /* Bug corrigido: `dia > 31 || mes > 12` não valida dia contra o mês —
+     new Date() do JS nunca dá Invalid Date para dia fora do mês, ele rola
+     pro mês seguinte (ex.: "31/04" virava silenciosamente 1º de maio).
+     Se o mês do resultado não bate com o mês pedido, o dia não existe. */
+  if (d.getMonth() !== mes - 1) return null;
   return isNaN(d.getTime()) ? null : d.getTime();
 }
 
@@ -9108,8 +9311,13 @@ async function conciliarDoDossie() {
  */
 async function carimbarTarefasNaOrigem(criadas) {
   const base = state.base;
-  const origem = base?.atas?.[0];
-  if (!base || !origem || !criadas.length) return;
+  /* Bug corrigido: só olhava base.atas[0] — numa conta que só tem "Pacotes
+     de entregas" e ainda nenhuma ata, `origem` vinha undefined e a função
+     retornava em silêncio mesmo com tarefas já criadas no ClickUp (nenhum
+     showMessage avisava que o vínculo não foi carimbado em lugar nenhum). */
+  const origem = base?.atas?.[0] || base?.entregas?.[0];
+  if (!base || !criadas.length) return;
+  if (!origem) { showMessage('Tarefas criadas, mas não há ata nem pacote de entregas para carimbar o vínculo.', 'info'); return; }
   try {
     const atual = origem.conteudo || await lerConteudoPagina(base.docId, origem.id);
     if (!atual) return;
@@ -9206,7 +9414,12 @@ function normalizarProposta(t, i) {
   return {
     ...t,
     _id: 'c' + i, _on: true, _criada: null, _home: undefined,
-    estimativa_min: Math.round(estimativaValida((+t.estimativa_min || 60) * 60000) / 60000),
+    /* Bug corrigido: `+t.estimativa_min || 60` trata o `0` legítimo que a IA
+       devolve para o pai de uma quebra em subtarefas (instruído no prompt,
+       linha ~8915) como se fosse "ausente" e troca por 60 — a tela então
+       mostra "60 min" para uma tarefa-pai que não deveria ter estimativa
+       própria. `Number.isFinite` aceita 0 e só cai no padrão se não for número. */
+    estimativa_min: Math.round(estimativaValida((Number.isFinite(+t.estimativa_min) ? +t.estimativa_min : 60) * 60000) / 60000),
     subtarefas: subs.length >= 2 ? subs : []
   };
 }
@@ -9226,7 +9439,7 @@ function renderConciliacao() {
     /* v22 · A estimativa vem da IA e é presa na faixa de 30 min a 4 h. Se ela
        tentou passar do teto, o aviso aparece: é sinal de que a tarefa deveria
        ter sido quebrada e não foi. */
-    const estBruta = +t.estimativa_min || (CONFIG.estimativa.padraoMs / 60000);
+    const estBruta = Number.isFinite(+t.estimativa_min) ? +t.estimativa_min : (CONFIG.estimativa.padraoMs / 60000);
     const estMin = Math.round(estimativaValida(estBruta * 60000) / 60000);
     const estCorrigida = Math.round(estBruta) !== estMin;
 
@@ -9247,6 +9460,11 @@ function renderConciliacao() {
     if (palpite == null) faltas.push('responsável');
     if (!prazoMs) faltas.push('data');
     if (!estMin) faltas.push('estimativa');
+    /* Bug corrigido: o comentário acima promete o botão bloqueado enquanto
+       houver pendência, mas nada lia `faltas` fora deste escopo — guardamos
+       no próprio item para renderConciliacao() poder checar depois de
+       renderizar todos os cards (ver uso logo abaixo de `$('conc-body').innerHTML =`). */
+    t._faltas = faltas;
 
     return `<div class="conc-card ${t._on ? '' : 'off'} ${t._criada ? 'criada' : ''}" id="card-${t._id}">
       <div class="conc-head">
@@ -9302,7 +9520,11 @@ function renderConciliacao() {
       ${url ? `<a class="ext-link" href="${url}" target="_blank">↗</a>` : ''}
     </div>`;
 
-  const nCriar = c.criar.filter(t => !t._criada).length;
+  /* Bug corrigido: contava toda tarefa não criada, mesmo com o checkbox
+     desmarcado — o rodapé ("N tarefa(s) marcada(s)") e o botão de criação
+     não refletiam a seleção real. criarTarefasSelecionadas() só cria quem
+     está `_on`; a contagem aqui precisa usar o mesmo filtro. */
+  const nCriar = c.criar.filter(t => t._on && !t._criada).length;
 
   $('conc-body').innerHTML = `
     ${semLista ? `<div class="banner err" style="margin-bottom:16px"><span>⚠️</span><div>Nenhuma lista foi lida da pasta do cliente. Remapeie a base antes de criar tarefas.</div></div>` : ''}
@@ -9338,10 +9560,19 @@ function renderConciliacao() {
       ${c.fora.map(x => linha(`${x.task_nome} · ${x.motivo || ''}`, 'fora de escopo', '#FBBF24', x.task_id ? taskUrl(x.task_id) : '')).join('')}
     </div>` : ''}`;
 
+  /* Bug corrigido: `faltas` (calculada em cardCriar, acima) era só um aviso
+     visual — o botão nunca era bloqueado por pendência, contradizendo o
+     comentário "v22 · A TRINDADE DE ATRIBUIÇÃO" em cardCriar(). Agora uma
+     tarefa marcada (`_on`) com responsável/data/estimativa faltando
+     bloqueia a criação em lote, como documentado. */
+  const semTrindade = c.criar.some(t => t._on && !t._criada && t._faltas?.length);
+
   $('conc-rodape').textContent = nCriar
-    ? `${nCriar} tarefa(s) marcada(s) para criação.`
+    ? (semTrindade
+      ? `${nCriar} tarefa(s) marcada(s), mas há pendência de responsável/data/estimativa — preencha ou use "Sugerir por IA".`
+      : `${nCriar} tarefa(s) marcada(s) para criação.`)
     : 'Nada marcado para criação.';
-  $('btn-conc-criar').disabled = !nCriar || semLista;
+  $('btn-conc-criar').disabled = !nCriar || semLista || semTrindade;
 }
 
 /** v20.1 · guarda a escolha de responsável no item, não só no DOM. Sem isso a
@@ -10125,9 +10356,11 @@ async function recarregarBase() {
   /* O card do painel depende das tarefas, que chegam depois da árvore.
      Sem este segundo render ele ficaria preso no spinner. */
   if (state.base) renderPainelCard(state.base, state.tarefas, p);
-  /* Cache do radar: usado para priorizar memória e contexto por relevância. */
-  try { state.radarCache = calcularRadar(state.base, { janelaDias: CONFIG.radar.janelaDias }).temas; }
-  catch (_) { state.radarCache = []; }
+  /* state.radarCache já foi gravado por renderRadarCard() (chamada dentro de
+     renderBase(), acima) com o mesmo cálculo — recomputar aqui seria repetir
+     calcularRadar() sobre a mesma base na mesma passagem. Se o mapeamento
+     falhou, não há base nova para calcular: mantém o cache anterior em vez
+     de zerá-lo. */
   renderEstadoBar(state.base, state.tarefas, p);
 }
 
@@ -11718,14 +11951,23 @@ function reconciliarGestao(t, e) {
     if (m && !item.donoIds.includes(m.id)) {
       item.donoIds.push(m.id);
       item.dono = item.dono ? `${item.dono}, ${m.nome}` : m.nome;
+      /* Mantém donoPares em dia — capacidadePorResponsavel() usa esse par
+         id+nome (ver correção acima na leitura de tarefas); sem isto, o
+         responsável recém-atribuído sumiria do card de capacidade até a
+         próxima releitura completa do board. */
+      (item.donoPares ||= []).push({ id: m.id, nome: m.nome });
     }
   }
   item._aplicadaEm = Date.now();
   const agora = Date.now();
-  an.higiene.vencidas = abertasDe(an).filter(i => i.prazo && i.prazo < agora);
-  an.higiene.semPrazo = abertasDe(an).filter(i => !i.prazo);
-  an.higiene.semDono = abertasDe(an).filter(i => !i.dono);
-  an.higiene.semEstimativa = abertasDe(an).filter(i => !i.estimado);
+  /* Bug corrigido: chamava abertasDe(an) quatro vezes seguidas (uma
+     varredura completa de an.itens cada vez) para aplicar quatro filtros
+     diferentes sobre o mesmo resultado — computa uma vez só e reusa. */
+  const abertas = abertasDe(an);
+  an.higiene.vencidas = abertas.filter(i => i.prazo && i.prazo < agora);
+  an.higiene.semPrazo = abertas.filter(i => !i.prazo);
+  an.higiene.semDono = abertas.filter(i => !i.dono);
+  an.higiene.semEstimativa = abertas.filter(i => !i.estimado);
   an.higiene.paradas = paradasDe(an, an.janela);
   an.responsaveis = capacidadePorResponsavel(an);
 }
@@ -14101,8 +14343,13 @@ async function salvarPauta() {
       relacoes: inferirRelacoes(base, { tipo: 'pauta' }),
       extra: `**Duração prevista:** ${meta.duracao} min · **Status:** aguardando realização`
     });
-    await criarPagina(base.docId, { nome: titulo, conteudo: cab + corpo, paiId });
-    (registrarUso('pauta', titulo, { url: pageId ? pageUrl(base.docId, pageId) : '' }), showMessage('Pauta salva em 03.', 'success'));
+    /* Bug corrigido: `pageId` era usado sem nunca ter sido declarado neste
+       escopo (ReferenceError garantido) — a página já tinha sido criada no
+       ClickUp quando o erro estourava, então o usuário via "erro" e podia
+       clicar em salvar de novo, duplicando a página. */
+    const pageId = await criarPagina(base.docId, { nome: titulo, conteudo: cab + corpo, paiId });
+    registrarUso('pauta', titulo, { url: pageId ? pageUrl(base.docId, pageId) : '' });
+    showMessage('Pauta salva em 03.', 'success');
     closeModal('modal-pauta-out');
     await recarregarBase();
     await descarregarTrilha();
